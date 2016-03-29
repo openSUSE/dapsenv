@@ -16,17 +16,11 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
-import sys
-from dapsenv.exitcodes import *
+from dapsenv.actions.action import Action
 
-class DapsEnvException(Exception):
-    pass
-
-class InvalidCommandLineException(DapsEnvException):
+class Config(Action):
     def __init__(self):
-        sys.exit(E_INVALID_CLI)
+        pass
 
-class InvalidActionException(DapsEnvException):
-    def __init__(self, action):
-        print("No implementation for '{}' found.".format(action))
-        sys.exit(E_NO_IMPLEMENTATION_FOUND)
+    def execute(self):
+        pass

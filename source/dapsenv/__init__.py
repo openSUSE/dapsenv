@@ -19,6 +19,7 @@
 import sys
 from dapsenv.argparser import ArgParser
 from dapsenv.exceptions import *
+from importlib import import_module
 
 def main(args=None):
     if not args:
@@ -32,3 +33,19 @@ def main(args=None):
     if not parsed_args["action"]:
         argparser.print_help()
         raise InvalidCommandLineException()
+
+    # execute related stuff for the sub-command
+    execute(parsed_args["action"])
+
+def execute(action):
+    # for the passed action/sub-command it's required to find the appropriate "Action Class". Each
+    # sub-command has its own action class
+    try:
+        class_name = action.title()
+        module = import_module("dapsenv.actions.{}".format(action))
+
+        # initialize class
+        instance = getattr(module, class_name)()
+        instance.execute()
+    except (ImportError, AttributeError):
+        raise InvalidActionException(action)

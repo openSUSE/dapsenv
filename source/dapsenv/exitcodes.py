@@ -16,4 +16,5 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
+E_NO_IMPLEMENTATION_FOUND=1
 E_INVALID_CLI=2
