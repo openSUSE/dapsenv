@@ -1,5 +1,5 @@
 # DAPS Build Environment
-[![Code Health](https://landscape.io/github/mschnitzer/daps-buildenv/master/landscape.svg?style=flat)](https://landscape.io/github/mschnitzer/daps-buildenv/master)
+[![Travis](https://api.travis-ci.org/mschnitzer/dapsenv.svg)](https://api.travis-ci.org/mschnitzer/dapsenv.svg) [![Code Health](https://landscape.io/github/mschnitzer/daps-buildenv/master/landscape.svg?style=flat)](https://landscape.io/github/mschnitzer/daps-buildenv/master)
 
 A build environment to build documentations with DAPS.
 
