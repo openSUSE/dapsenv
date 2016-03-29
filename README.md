@@ -1,5 +1,5 @@
 # DAPS Build Environment
-[![Travis](https://api.travis-ci.org/mschnitzer/dapsenv.svg)](https://api.travis-ci.org/mschnitzer/dapsenv.svg) [![Code Health](https://landscape.io/github/mschnitzer/daps-buildenv/master/landscape.svg?style=flat)](https://landscape.io/github/mschnitzer/daps-buildenv/master) [![Scrutinizer](https://scrutinizer-ci.com/g/mschnitzer/dapsenv/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/mschnitzer/dapsenv/badges/quality-score.png?b=master)
+[![Travis](https://api.travis-ci.org/mschnitzer/dapsenv.svg)](https://travis-ci.org/mschnitzer/dapsenv) [![Code Health](https://landscape.io/github/mschnitzer/daps-buildenv/master/landscape.svg?style=flat)](https://landscape.io/github/mschnitzer/daps-buildenv) [![Scrutinizer](https://scrutinizer-ci.com/g/mschnitzer/dapsenv/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/mschnitzer/dapsenv/badges/quality-score.png?b=master)
 
 A build environment to build documentations with DAPS.
 
