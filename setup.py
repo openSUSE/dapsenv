@@ -51,8 +51,8 @@ setupdict = dict(
     url='https://github.com/openSUSE/dapsenv',
 
     # Author details
-    author='Rick Salevsky',
-    author_email='rsalevsky@suse.de',
+    author='Manuel Schnitzer',
+    author_email='webmaster@mschnitzer.de',
 
     # Choose your license
     license='GPL-3.0',
