@@ -20,8 +20,8 @@ import sys
 from dapsenv.exitcodes import E_INVALID_CLI
 
 class DapsEnvException(Exception):
-	pass
+    pass
 
 class InvalidCommandLineException(DapsEnvException):
-	def __init__(self):
-		sys.exit(E_INVALID_CLI)
+    def __init__(self):
+        sys.exit(E_INVALID_CLI)

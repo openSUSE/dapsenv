@@ -21,14 +21,14 @@ from dapsenv.argparser import ArgParser
 from dapsenv.exceptions import *
 
 def main(args=None):
-	if not args:
-		args = sys.argv[1:]
+    if not args:
+        args = sys.argv[1:]
 
-	# let's parse cli arguments with ArgParser()
-	argparser = ArgParser(args)
-	parsed_args = argparser.parse()
+    # let's parse cli arguments with ArgParser()
+    argparser = ArgParser(args)
+    parsed_args = argparser.parse()
 
-	# if no sub-command/action was specified
-	if not parsed_args["action"]:
-		argparser.print_help()
-		raise InvalidCommandLineException()
+    # if no sub-command/action was specified
+    if not parsed_args["action"]:
+        argparser.print_help()
+        raise InvalidCommandLineException()
