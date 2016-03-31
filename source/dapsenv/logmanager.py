@@ -20,10 +20,10 @@ import logging
 import sys
 
 LOGLEVELS = {
-	None: logging.NOTSET,
-	0: logging.NOTSET,
-	1: logging.INFO,
-	2: logging.DEBUG
+    None: logging.NOTSET,
+    0: logging.NOTSET,
+    1: logging.INFO,
+    2: logging.DEBUG
 }
 
 log = logging.getLogger(__file__)
