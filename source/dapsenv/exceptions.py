@@ -17,7 +17,8 @@
 # you may find current contact information at www.suse.com
 
 import sys
-from dapsenv.exitcodes import E_INVALID_CLI, E_NO_IMPLEMENTATION_FOUND, E_CONFIG_PROP_NOT_FOUND
+from dapsenv.exitcodes import E_INVALID_CLI, E_NO_IMPLEMENTATION_FOUND, E_CONFIG_PROP_NOT_FOUND, \
+                              E_CONFIG_FILE_PERMISSION_DENIED, E_CONFIG_FILE_NOT_CREATED
 
 class DapsEnvException(Exception):
     pass
@@ -37,3 +38,14 @@ class InvalidConfigTypeException(DapsEnvException):
 class ConfigPropertyNotFoundException(DapsEnvException):
     def __init__(self):
         sys.exit(E_CONFIG_PROP_NOT_FOUND)
+
+class ConfigFilePermissionErrorException(DapsEnvException):
+    def __init__(self, file_name):
+        print("Could not access config file '{}'! Please check the permissions.".format(file_name))
+        sys.exit(E_CONFIG_FILE_PERMISSION_DENIED)
+
+class ConfigFileNotCreatedException(DapsEnvException):
+    def __init__(self, file_name):
+        print("Config file '{}' does not exists. Please generate it by using: 'dapsenv config " \
+              "--generate --path {}'".format(file_name, file_name))
+        sys.exit(E_CONFIG_FILE_NOT_CREATED)

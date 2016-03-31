@@ -1,6 +1,7 @@
 import dapsenv.configmanager as configmanager
 import os.path
 import pytest
+from __utils__ import make_tmp_file
 from mock import patch
 
 test_data_dir = "{}/data".format(os.path.dirname(os.path.realpath(__file__)))
@@ -38,6 +39,48 @@ def test_get(mock_get_user_config_path, mock_get_global_config_path, config_type
 
     value = configmanager.get(prop, config_type, config_path)
     assert value == expect
+
+# it sets values for a property in a config file
+input_data = [
+    (
+        "abc",
+        "hello world",
+        "# that's a comment\nsomething_to_update=abc\nabc=hello world",
+        "own"
+    ),
+    (
+        "some_key",
+        "testxyz",
+        "# that's a comment\nsomething_to_update=abc\nsome_key=testxyz",
+        "global"
+    ),
+    (
+        "something_to_update",
+        "new_content",
+        "# that's a comment\nsomething_to_update=new_content",
+        "user"
+    ),
+]
+
+@patch("dapsenv.configmanager.get_global_config_path")
+@patch("dapsenv.configmanager.get_user_config_path")
+@pytest.mark.parametrize("prop,value,expected_content,config_type", input_data)
+def test_set(mock_get_user_config_path, mock_get_global_config_path, prop, value,
+    expected_content, config_type, tmpdir):
+
+    tmp_file = make_tmp_file("set-test.conf", tmpdir)
+    tmp_file_path = str(tmp_file.realpath())
+
+    mock_get_global_config_path.return_value = tmp_file_path
+    mock_get_user_config_path.return_value = tmp_file_path
+
+    configmanager.set(prop, value, config_type, tmp_file_path)
+
+    content = ""
+    with open(tmp_file_path, "r") as f:
+        content = f.read()
+
+    assert content == expected_content
 
 # it returns the correct paths for all 3 types of config files
 input_data = [

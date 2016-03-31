@@ -31,3 +31,14 @@ def test_get_property_exit_code(get_mocking, capsys):
         code = e.code
 
     assert code == E_CONFIG_PROP_NOT_FOUND
+
+# it calls configmanager.set at least one time
+@patch("dapsenv.configmanager.set")
+def test_set_property(mock_set):
+    args = {'user': True, 'global': False, 'property': 'test1', 'value': 'test2',
+            'action': 'config'}
+
+    config_class = Config()
+    config_class.execute(args)
+
+    assert mock_set.called is True

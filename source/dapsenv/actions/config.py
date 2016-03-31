@@ -54,4 +54,10 @@ class Config(Action):
             raise ConfigPropertyNotFoundException()
 
     def set_property(self, prop, value):
-        pass
+        """Sets a property of a value
+
+        :param string prop: The name of the property
+        :param string value: The value to be set
+        """
+
+        configmanager.set(prop, value, self.configtype)

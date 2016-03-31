@@ -17,8 +17,9 @@
 # you may find current contact information at www.suse.com
 
 import re
-from dapsenv.exceptions import InvalidConfigTypeException
-from os.path import expanduser
+from dapsenv.exceptions import InvalidConfigTypeException, ConfigFilePermissionErrorException, \
+                               ConfigFileNotCreatedException
+from os.path import expanduser, isfile
 
 def get(prop, config_type="", config_path=""):
     """Returns the value of a property - should be used from other modules only!
@@ -38,6 +39,19 @@ def get(prop, config_type="", config_path=""):
         paths = [get_global_config_path(), get_user_config_path()]
 
     return get_property_value(prop, paths)
+
+def set(prop, value, config_type="", config_path=""):
+    """Sets the value of a property - should be used from other modules only!
+
+    :param string prop: The requested property
+    :param string value: The value to be set
+    :param string config_type: The type of the config (global, user, own)
+    :param string config_path: Sets the path for a configuration file (only required if "own"
+                               is set in config_type)
+    """
+
+    path = get_config_path(config_type, config_path)
+    set_property_value(prop, value, path)
 
 def get_config_path(config_type, config_path=""):
     """Resolves a path for a config type
@@ -83,6 +97,61 @@ def get_property_value(prop, paths):
 
     data = parse_config(paths)
     return data.get(prop)
+
+def set_property_value(prop, value, path):
+    """Sets a value for a property - should only be used internally!
+
+    :param string prop: Name of the property
+    :param string path: The path to the configuration file
+    """
+
+    if not isfile(path):
+        ConfigFileNotCreatedException(path)
+
+    content = ""
+    added = False
+
+    try:
+        with open(path, "r+") as file_handle:
+            for line in file_handle:
+                # ignore lines starting with a hash (#) - comments
+                if line[0] == "#":
+                    content += line
+                    continue
+
+                # detect a property
+                if len(line) and line[0] != "\n":
+                    # cut property name from value
+                    index = line.find("=")
+
+                    # check if an equal sign was found
+                    if index:
+                        key = line[:index] # get property name
+                        if key == prop:
+                            content += "{}={}\n".format(key, value)
+                            added = True
+                            continue
+
+                content += line
+
+            # if the key does not exist, we append it to the end of the file
+            if not added:
+                # add a newline in front of the property name if the last character was not a newline
+                if len(content) > 0 and content[-1] != "\n":
+                    content += "\n"
+
+                content += "{}={}".format(prop, value)
+
+            # if the last character is a newline, remove it
+            if content[-1] == "\n":
+                content = content[:-1]
+
+            # overwrite old config file content
+            file_handle.seek(0)
+            file_handle.truncate()
+            file_handle.write(content)
+    except PermissionError:
+        raise ConfigFilePermissionErrorException(path)
 
 def parse_config(paths):
     """Parses all given configuration files and returns their content
