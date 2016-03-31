@@ -47,9 +47,9 @@ class Config(Action):
         :param string prop: The name of the property
         """
 
-        value = configmanager.get(prop, self.configtype)
+        value = configmanager.get_prop(prop, self.configtype)
         if value:
-            print(configmanager.get(prop, self.configtype))
+            print(configmanager.get_prop(prop, self.configtype))
         else:
             raise ConfigPropertyNotFoundException()
 
@@ -60,4 +60,4 @@ class Config(Action):
         :param string value: The value to be set
         """
 
-        configmanager.set(prop, value, self.configtype)
+        configmanager.set_prop(prop, value, self.configtype)

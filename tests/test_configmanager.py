@@ -37,7 +37,7 @@ def test_get(mock_get_user_config_path, mock_get_global_config_path, config_type
     mock_get_global_config_path.return_value = config_path
     mock_get_user_config_path.return_value = config_path
 
-    value = configmanager.get(prop, config_type, config_path)
+    value = configmanager.get_prop(prop, config_type, config_path)
     assert value == expect
 
 # it sets values for a property in a config file
@@ -74,7 +74,7 @@ def test_set(mock_get_user_config_path, mock_get_global_config_path, prop, value
     mock_get_global_config_path.return_value = tmp_file_path
     mock_get_user_config_path.return_value = tmp_file_path
 
-    configmanager.set(prop, value, config_type, tmp_file_path)
+    configmanager.set_prop(prop, value, config_type, tmp_file_path)
 
     content = ""
     with open(tmp_file_path, "r") as f:

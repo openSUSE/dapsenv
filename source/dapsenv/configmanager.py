@@ -21,7 +21,7 @@ from dapsenv.exceptions import InvalidConfigTypeException, ConfigFilePermissionE
                                ConfigFileNotCreatedException
 from os.path import expanduser, isfile
 
-def get(prop, config_type="", config_path=""):
+def get_prop(prop, config_type="", config_path=""):
     """Returns the value of a property - should be used from other modules only!
 
     :param string prop: The requested property
@@ -40,7 +40,7 @@ def get(prop, config_type="", config_path=""):
 
     return get_property_value(prop, paths)
 
-def set(prop, value, config_type="", config_path=""):
+def set_prop(prop, value, config_type="", config_path=""):
     """Sets the value of a property - should be used from other modules only!
 
     :param string prop: The requested property
