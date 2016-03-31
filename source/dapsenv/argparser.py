@@ -46,6 +46,10 @@ class ArgParser:
             version="DAPS Build Environment Version {}".format(__version__)
         )
 
+        self.parser.add_argument(
+            "-v", "--verbose", action="count", help="Increase verbosity level"
+        )
+
     def addConfigCommand(self):
         cmd = self.cmdSubParser.add_parser(
             "config", aliases=["c"], help="Modifying the configuration file"

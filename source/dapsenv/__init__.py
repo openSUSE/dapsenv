@@ -18,7 +18,8 @@
 
 import sys
 from dapsenv.argparser import ArgParser
-from dapsenv.exceptions import *
+from dapsenv.exceptions import InvalidCommandLineException, InvalidActionException
+from dapsenv.logmanager import set_log_level
 from importlib import import_module
 
 def main(args=None):
@@ -28,6 +29,9 @@ def main(args=None):
     # let's parse cli arguments with ArgParser()
     argparser = ArgParser(args)
     parsed_args = argparser.parse()
+
+    # set log level
+    set_log_level(parsed_args["verbose"])
 
     # if no sub-command/action was specified
     if not parsed_args["action"]:

@@ -19,6 +19,7 @@
 import sys
 from dapsenv.exitcodes import E_INVALID_CLI, E_NO_IMPLEMENTATION_FOUND, E_CONFIG_PROP_NOT_FOUND, \
                               E_CONFIG_FILE_PERMISSION_DENIED, E_CONFIG_FILE_NOT_CREATED
+from dapsenv.logmanager import log
 
 class DapsEnvException(Exception):
     pass
@@ -26,13 +27,13 @@ class DapsEnvException(Exception):
 class InvalidCommandLineException(DapsEnvException):
     def __init__(self, message=""):
         if len(message):
-            print(message)
+            log.error(message)
 
         sys.exit(E_INVALID_CLI)
 
 class InvalidActionException(DapsEnvException):
     def __init__(self, action):
-        print("No implementation for '{}' found.".format(action))
+        log.error("No implementation for '{}' found.".format(action))
         sys.exit(E_NO_IMPLEMENTATION_FOUND)
 
 class InvalidConfigTypeException(DapsEnvException):
@@ -44,11 +45,11 @@ class ConfigPropertyNotFoundException(DapsEnvException):
 
 class ConfigFilePermissionErrorException(DapsEnvException):
     def __init__(self, file_name):
-        print("Could not access config file '{}'! Please check the permissions.".format(file_name))
+        log.error("Could not access config file '{}'! Please check the permissions.".format(file_name))
         sys.exit(E_CONFIG_FILE_PERMISSION_DENIED)
 
 class ConfigFileNotCreatedException(DapsEnvException):
     def __init__(self, file_name):
-        print("Config file '{}' does not exist. Please generate it by using: 'dapsenv config " \
-              "--generate --path {}'".format(file_name, file_name))
+        log.error("Config file '{}' does not exist. Please generate it by using: 'dapsenv " \
+              "config --generate --path {}'".format(file_name, file_name))
         sys.exit(E_CONFIG_FILE_NOT_CREATED)

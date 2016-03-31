@@ -110,7 +110,7 @@ def set_property_value(prop, value, path):
     """
 
     if not isfile(path):
-        ConfigFileNotCreatedException(path)
+        raise ConfigFileNotCreatedException(path)
 
     content = ""
     updated = False
@@ -156,14 +156,20 @@ def parse_config(paths):
 
     data = {}
 
-    for path in paths:
-        with open(path) as f:
-            for line in f:
-                # search for key=value pairs
-                m = _search_pattern.search(line)
+    try:
+        for path in paths:
+            if not isfile(path):
+                raise ConfigFileNotCreatedException(path)
 
-                if m:
-                    result = m.groupdict()
-                    data[result["key"]] = result["value"]
+            with open(path) as f:
+                for line in f:
+                    # search for key=value pairs
+                    m = _search_pattern.search(line)
 
-    return data
+                    if m:
+                        result = m.groupdict()
+                        data[result["key"]] = result["value"]
+
+        return data
+    except PermissionError:
+        raise ConfigFilePermissionErrorException(path)
