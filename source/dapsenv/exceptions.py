@@ -17,7 +17,7 @@
 # you may find current contact information at www.suse.com
 
 import sys
-from dapsenv.exitcodes import *
+from dapsenv.exitcodes import E_INVALID_CLI, E_NO_IMPLEMENTATION_FOUND, E_CONFIG_PROP_NOT_FOUND
 
 class DapsEnvException(Exception):
     pass

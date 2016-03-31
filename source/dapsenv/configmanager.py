@@ -20,10 +20,10 @@ import re
 from dapsenv.exceptions import InvalidConfigTypeException
 from os.path import expanduser
 
-def get(property, config_type="", config_path=""):
+def get(prop, config_type="", config_path=""):
     """Returns the value of a property - should be used from other modules only!
 
-    :param string property: The requested property
+    :param string prop: The requested property
     :param string config_type: The type of the config (global, user, own)
     :param string config_path: Sets the path for a configuration file (only required if "own"
                                is set in config_type)
@@ -37,7 +37,7 @@ def get(property, config_type="", config_path=""):
     else:
         paths = [get_global_config_path(), get_user_config_path()]
 
-    return get_property_value(property, paths)
+    return get_property_value(prop, paths)
 
 def get_config_path(config_type, config_path=""):
     """Resolves a path for a config type
@@ -72,17 +72,17 @@ def get_user_config_path():
 
     return "{}/.dapsenv/dapsenv.conf".format(expanduser("~"))
 
-def get_property_value(property, paths):
+def get_property_value(prop, paths):
     """Returns the value of a property - should only be used internally!
 
-    :param string property: Name of the property
+    :param string prop: Name of the property
     :param list paths: The paths to look for configuration files
     :return string|None: The value of the given property or None if no appropriate property was
                          found
     """
 
     data = parse_config(paths)
-    return data.get(property)
+    return data.get(prop)
 
 def parse_config(paths):
     """Parses all given configuration files and returns their content

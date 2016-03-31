@@ -18,7 +18,7 @@
 
 class Action:
 
-    def execute(self, args={}):
+    def execute(self, args):
         """Executes the main code for the current action
 
         :param dict args: A list of arguments what come from argparse

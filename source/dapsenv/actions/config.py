@@ -24,10 +24,10 @@ class Config(Action):
     def __init__(self):
         pass
 
-    def execute(self, args={}):
+    def execute(self, args):
         """@see Action.execute()
         """
-        
+
         # determine wished configuration type
         if args["global"]:
             self.configtype = "global"
@@ -41,17 +41,17 @@ class Config(Action):
         else:
             self.set_property(args["property"], args["value"])
 
-    def get_property(self, property):
+    def get_property(self, prop):
         """Displays the value of the wanted property
 
-        :param string property: The name of the property
+        :param string prop: The name of the property
         """
 
-        value = configmanager.get(property, self.configtype)
+        value = configmanager.get(prop, self.configtype)
         if value:
-            print(configmanager.get(property, self.configtype))
+            print(configmanager.get(prop, self.configtype))
         else:
             raise ConfigPropertyNotFoundException()
 
-    def set_property(self, property, value):
+    def set_property(self, prop, value):
         pass
