@@ -24,7 +24,10 @@ class DapsEnvException(Exception):
     pass
 
 class InvalidCommandLineException(DapsEnvException):
-    def __init__(self):
+    def __init__(self, message=""):
+        if len(message):
+            print(message)
+
         sys.exit(E_INVALID_CLI)
 
 class InvalidActionException(DapsEnvException):
@@ -46,6 +49,6 @@ class ConfigFilePermissionErrorException(DapsEnvException):
 
 class ConfigFileNotCreatedException(DapsEnvException):
     def __init__(self, file_name):
-        print("Config file '{}' does not exists. Please generate it by using: 'dapsenv config " \
+        print("Config file '{}' does not exist. Please generate it by using: 'dapsenv config " \
               "--generate --path {}'".format(file_name, file_name))
         sys.exit(E_CONFIG_FILE_NOT_CREATED)

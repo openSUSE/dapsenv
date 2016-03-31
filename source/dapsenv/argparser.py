@@ -63,6 +63,15 @@ class ArgParser:
             "which is stored in the home directory of the current user."
         )
 
+        config_group.add_argument(
+            "--own", "-o", action="store_true", help="Specifies to use an own specified " \
+            "configuration which needs to be specified by --path"
+        )
+
+        cmd.add_argument(
+            "--path", action="store", help="Specifies a path to a configuration file."
+        )
+
         cmd.add_argument(
             "--property", "-p", action="store", required=True,
             help="Specifies a property from the config file. If no value is set with --value, " \

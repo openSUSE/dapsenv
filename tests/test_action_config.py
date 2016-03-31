@@ -2,10 +2,13 @@ from dapsenv.actions.config import Config
 from dapsenv.exitcodes import E_CONFIG_PROP_NOT_FOUND
 from mock import patch
 
+general_args = {'global': True, 'property': 'test', 'action': 'config', 'user': False,
+                'value': None, 'path': '', 'own': False}
+
 # it shows the correct property value on the command line
 @patch("dapsenv.configmanager.get_prop")
 def test_get_property(get_mocking, capsys):
-    args = {'global': True, 'property': 'test', 'action': 'config', 'user': False, 'value': None}
+    args = general_args
     expected = "abc"
 
     get_mocking.return_value = expected
@@ -19,7 +22,7 @@ def test_get_property(get_mocking, capsys):
 # it exits with exit code 4 if a property was not found
 @patch("dapsenv.configmanager.get_prop")
 def test_get_property_exit_code(get_mocking, capsys):
-    args = {'global': True, 'property': 'test', 'action': 'config', 'user': False, 'value': None}
+    args = general_args
     get_mocking.return_value = ""
 
     config_class = Config()
@@ -35,8 +38,8 @@ def test_get_property_exit_code(get_mocking, capsys):
 # it calls configmanager.set at least one time
 @patch("dapsenv.configmanager.set_prop")
 def test_set_property(mock_set):
-    args = {'user': True, 'global': False, 'property': 'test1', 'value': 'test2',
-            'action': 'config'}
+    args = general_args
+    args["value"] = "test"
 
     config_class = Config()
     config_class.execute(args)
