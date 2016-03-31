@@ -30,3 +30,10 @@ class InvalidActionException(DapsEnvException):
     def __init__(self, action):
         print("No implementation for '{}' found.".format(action))
         sys.exit(E_NO_IMPLEMENTATION_FOUND)
+
+class InvalidConfigTypeException(DapsEnvException):
+    pass
+
+class ConfigPropertyNotFoundException(DapsEnvException):
+    def __init__(self):
+        sys.exit(E_CONFIG_PROP_NOT_FOUND)

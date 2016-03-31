@@ -20,7 +20,7 @@ def test_parse_success():
     code = 0
 
     try:
-        argparser = ArgParser(["config", "--property", "test"])
+        argparser = ArgParser(["config", "--global", "--property", "test"])
         parsed_args = argparser.parse()
     except SystemExit as e:
         code = e.code

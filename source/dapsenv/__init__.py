@@ -34,10 +34,12 @@ def main(args=None):
         argparser.print_help()
         raise InvalidCommandLineException()
 
-    # execute related stuff for the sub-command
-    execute(parsed_args["action"])
+    # execute
+    execute(parsed_args)
 
-def execute(action):
+def execute(args):
+    action = args["action"]
+
     # for the passed action/sub-command it's required to find the appropriate "Action Class". Each
     # sub-command has its own action class
     try:
@@ -46,6 +48,6 @@ def execute(action):
 
         # initialize class
         instance = getattr(module, class_name)()
-        instance.execute()
-    except (ImportError, AttributeError):
+        instance.execute(args)
+    except ImportError:
         raise InvalidActionException(action)

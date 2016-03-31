@@ -19,7 +19,7 @@ def test_action_not_implemented():
     code = 0
 
     try:
-        execute("test123")
+        execute({ "action": "test123" })
     except SystemExit as e:
         code = e.code
 

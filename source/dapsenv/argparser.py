@@ -51,6 +51,18 @@ class ArgParser:
             "config", aliases=["c"], help="Modifying the configuration file"
         )
 
+        config_group = cmd.add_mutually_exclusive_group(required=True)
+
+        config_group.add_argument(
+            "--global", "-g", action="store_true", help="Specifies to use the global " \
+            "configuration which is stored in the configuration directory /etc."
+        )
+
+        config_group.add_argument(
+            "--user", "-u", action="store_true", help="Specifies to use the user configuration " \
+            "which is stored in the home directory of the current user."
+        )
+
         cmd.add_argument(
             "--property", "-p", action="store", required=True,
             help="Specifies a property from the config file. If no value is set with --value, " \
