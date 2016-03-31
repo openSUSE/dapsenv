@@ -63,14 +63,16 @@ def get_config_path(config_type, config_path=""):
     :return string: a config path
     """
 
-    if config_type == "own":
-        return config_path
-    elif config_type == "user":
-        return get_user_config_path()
-    elif config_type == "global":
-        return get_global_config_path()
+    data = {
+        "own": config_path,
+        "user": get_user_config_path(),
+        "global": get_global_config_path()
+    }
 
-    raise InvalidConfigTypeException()
+    try:
+        return data[config_type]
+    except KeyError:
+        raise InvalidConfigTypeException()
 
 def get_global_config_path():
     """Returns the path of the global configuration file
