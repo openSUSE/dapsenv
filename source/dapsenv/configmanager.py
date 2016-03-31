@@ -21,6 +21,8 @@ from dapsenv.exceptions import InvalidConfigTypeException, ConfigFilePermissionE
                                ConfigFileNotCreatedException
 from os.path import expanduser, isfile
 
+_search_pattern = re.compile("(?!#)(?P<key>[\w\d]+)\s*=\s*(?P<value>.*)")
+
 def get_prop(prop, config_type="", config_path=""):
     """Returns the value of a property - should be used from other modules only!
 
@@ -109,47 +111,36 @@ def set_property_value(prop, value, path):
         ConfigFileNotCreatedException(path)
 
     content = ""
-    added = False
+    updated = False
 
     try:
-        with open(path, "r+") as file_handle:
-            for line in file_handle:
-                # ignore lines starting with a hash (#) - comments
-                if line[0] == "#":
-                    content += line
-                    continue
+        with open(path, "r+") as f:
+            for line in f:
+                m = _search_pattern.search(line)
 
-                # detect a property
-                if len(line) and line[0] != "\n":
-                    # cut property name from value
-                    index = line.find("=")
+                if m:
+                    result = m.groupdict()
 
-                    # check if an equal sign was found
-                    if index:
-                        key = line[:index] # get property name
-                        if key == prop:
-                            content += "{}={}\n".format(key, value)
-                            added = True
-                            continue
+                    # check if the found property matches with the wanted property
+                    if result["key"] == prop:
+                        content += "{}={}\n".format(prop, value)
+                        updated = True
+                        continue
 
                 content += line
 
-            # if the key does not exist, we append it to the end of the file
-            if not added:
-                # add a newline in front of the property name if the last character was not a newline
-                if len(content) > 0 and content[-1] != "\n":
-                    content += "\n"
-
-                content += "{}={}".format(prop, value)
-
             # if the last character is a newline, remove it
-            if content[-1] == "\n":
+            if len(content) > 0 and content[-1] == "\n":
                 content = content[:-1]
 
+            # create a new entry if we property does not yet exist
+            if not updated:
+                content += "\n{}={}".format(prop, value)
+
             # overwrite old config file content
-            file_handle.seek(0)
-            file_handle.truncate()
-            file_handle.write(content)
+            f.seek(0)
+            f.truncate()
+            f.write(content)
     except PermissionError:
         raise ConfigFilePermissionErrorException(path)
 
@@ -167,7 +158,8 @@ def parse_config(paths):
         with open(path) as f:
             for line in f:
                 # search for key=value pairs
-                m = re.search("(?!#)(?P<key>[\w\d]+)\s*=\s*(?P<value>.*)", line)
+                m = _search_pattern.search(line)
+
                 if m:
                     result = m.groupdict()
                     data[result["key"]] = result["value"]
