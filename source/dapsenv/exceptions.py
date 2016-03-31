@@ -33,7 +33,7 @@ class InvalidCommandLineException(DapsEnvException):
 
 class InvalidActionException(DapsEnvException):
     def __init__(self, action):
-        log.error("No implementation for '{}' found.".format(action))
+        log.error("No implementation for '%s' found.", action)
         sys.exit(E_NO_IMPLEMENTATION_FOUND)
 
 class InvalidConfigTypeException(DapsEnvException):
@@ -45,11 +45,11 @@ class ConfigPropertyNotFoundException(DapsEnvException):
 
 class ConfigFilePermissionErrorException(DapsEnvException):
     def __init__(self, file_name):
-        log.error("Could not access config file '{}'! Please check the permissions.".format(file_name))
+        log.error("Could not access config file '%s'! Please check the permissions.", file_name)
         sys.exit(E_CONFIG_FILE_PERMISSION_DENIED)
 
 class ConfigFileNotCreatedException(DapsEnvException):
     def __init__(self, file_name):
-        log.error("Config file '{}' does not exist. Please generate it by using: 'dapsenv " \
-              "config --generate --path {}'".format(file_name, file_name))
+        log.error("Config file '%s' does not exist. Please generate it by using: 'dapsenv " \
+              "config --generate --path %s", file_name, file_name)
         sys.exit(E_CONFIG_FILE_NOT_CREATED)
