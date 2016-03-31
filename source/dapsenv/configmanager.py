@@ -130,7 +130,7 @@ def set_property_value(prop, value, path):
                 content += line
 
             # if the last character is a newline, remove it
-            if len(content) > 0 and content[-1] == "\n":
+            if len(content) and content[-1] == "\n":
                 content = content[:-1]
 
             # create a new entry if we property does not yet exist
