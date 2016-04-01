@@ -3,7 +3,7 @@ from dapsenv.exitcodes import E_CONFIG_PROP_NOT_FOUND
 from mock import patch
 
 general_args = {'global': True, 'property': 'test', 'action': 'config', 'user': False,
-                'value': None, 'path': '', 'own': False}
+                'value': None, 'path': '', 'own': False, 'generate': False, 'force': False}
 
 # it shows the correct property value on the command line
 @patch("dapsenv.configmanager.get_prop")

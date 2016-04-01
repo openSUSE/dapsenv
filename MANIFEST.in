@@ -1,0 +1,3 @@
+include source/dapsenv/templates/dapsenv.conf
+
+global-exclude *.py[cod] __pycache__ *.so *.dylib

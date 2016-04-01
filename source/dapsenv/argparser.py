@@ -72,12 +72,21 @@ class ArgParser:
             "configuration which needs to be specified by --path"
         )
 
+        config_group.add_argument(
+            "--generate", action="store_true", help="Generates a configuration file. The " \
+            "must be set via --path."
+        )
+
+        cmd.add_argument(
+            "--force", action="store_true", help="Force the creation of a config file."
+        )
+
         cmd.add_argument(
             "--path", action="store", help="Specifies a path to a configuration file."
         )
 
         cmd.add_argument(
-            "--property", "-p", action="store", required=True,
+            "--property", "-p", action="store",
             help="Specifies a property from the config file. If no value is set with --value, " \
             "only the current value of the property will be print on the command line."
         )

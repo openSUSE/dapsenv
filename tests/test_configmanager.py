@@ -2,6 +2,8 @@ import dapsenv.configmanager as configmanager
 import os.path
 import pytest
 from __utils__ import make_tmp_file
+from dapsenv.exceptions import ConfigFileCreationPermissionErrorException, \
+                               ConfigFileAlreadyExistsException
 from mock import patch
 
 test_data_dir = "{}/data".format(os.path.dirname(os.path.realpath(__file__)))
@@ -122,3 +124,31 @@ def test_parse_config():
     }
 
     assert configmanager.parse_config(config_files) == expected
+
+# it tests if a config file can be created at a given path
+def test_generate_config(tmpdir_factory):
+    path = str(tmpdir_factory.getbasetemp())
+    file_name = "{}/dapsenv.conf".format(path)
+
+    assert os.path.exists(file_name) is False
+    configmanager.generate_config(path)
+    assert os.path.exists(file_name) is True
+
+# it fails if a configuration file could not be created due to invalid permissions
+def test_generate_config_permission_error():
+    assert os.path.exists("/dapsenv.conf") is False
+
+    with pytest.raises(ConfigFileCreationPermissionErrorException):
+        configmanager.generate_config("/")
+
+# it fails if a configuration file could not be created cause there is already
+# a config file with the same name
+def test_generate_config_already_exists():
+    path = str(tmpdir_factory.getbasetemp())
+    file_name = "{}/dapsenv.conf".format(path)
+
+    if not os.path.exists(file_name):
+        configmanager.generate_config(path)
+
+    with pytest.raises(ConfigFileAlreadyExistsException):
+        configmanager.generate_config(file_name)

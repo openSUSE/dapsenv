@@ -17,8 +17,12 @@
 # you may find current contact information at www.suse.com
 
 import re
+import shutil
+import os
 from dapsenv.exceptions import InvalidConfigTypeException, ConfigFilePermissionErrorException, \
-                               ConfigFileNotCreatedException
+                               ConfigFileNotCreatedException, ConfigFileAlreadyExistsException, \
+                               ConfigFileCreationPermissionErrorException
+from dapsenv.logmanager import log
 from os.path import expanduser, isfile
 
 _search_pattern = re.compile("(?!#)(?P<key>[\w\d]+)\s*=\s*(?P<value>.*)")
@@ -173,3 +177,22 @@ def parse_config(paths):
         return data
     except PermissionError:
         raise ConfigFilePermissionErrorException(path)
+
+def generate_config(path, force_overwrite=False):
+    """Generates a configuration file at the desired location
+
+    :param string path: Desired location
+    :param bool force_overwrite: Specifies if the file does already exist if
+                                 it should be overwritten
+    """
+
+    currdir = os.path.dirname(os.path.realpath(__file__))
+
+    if not force_overwrite:
+        if os.path.exists("{}/dapsenv.conf".format(path)):
+            raise ConfigFileAlreadyExistsException(path)
+
+    try:
+        shutil.copy("{}/templates/dapsenv.conf".format(currdir), path)
+    except PermissionError:
+        raise ConfigFileCreationPermissionErrorException(path)

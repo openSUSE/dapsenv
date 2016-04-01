@@ -53,3 +53,11 @@ class ConfigFileNotCreatedException(DapsEnvException):
         log.error("Config file '%s' does not exist. Please generate it by using: 'dapsenv " \
               "config --generate --path %s", file_name, file_name)
         sys.exit(E_CONFIG_FILE_NOT_CREATED)
+
+class ConfigFileCreationPermissionErrorException(DapsEnvException):
+    def __init__(self, path):
+        self.path = path
+
+class ConfigFileAlreadyExistsException(DapsEnvException):
+    def __init__(self, path):
+        self.path = path
