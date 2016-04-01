@@ -143,12 +143,14 @@ def test_generate_config_permission_error():
 
 # it fails if a configuration file could not be created cause there is already
 # a config file with the same name
-def test_generate_config_already_exists():
+def test_generate_config_already_exists(tmpdir_factory):
     path = str(tmpdir_factory.getbasetemp())
     file_name = "{}/dapsenv.conf".format(path)
 
     if not os.path.exists(file_name):
         configmanager.generate_config(path)
 
+    assert os.path.exists(file_name) is True
+
     with pytest.raises(ConfigFileAlreadyExistsException):
-        configmanager.generate_config(file_name)
+        configmanager.generate_config(path)
