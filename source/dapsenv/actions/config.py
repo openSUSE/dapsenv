@@ -82,11 +82,11 @@ class Config(Action):
         try:
             configmanager.generate_config(path, self._args["force"])
         except ConfigFileAlreadyExistsException as e:
-            log.error("There is already a file called 'dapsenv.conf' in the directory '{}'. " \
-                "Use --force to overwrite that file.".format(e.path))
+            log.error("There is already a file called 'dapsenv.conf' in the directory '%s'. " \
+                "Use --force to overwrite that file.", e.path)
             sys.exit(E_CONFIG_FILE_ALREADY_CREATED)
         except ConfigFileCreationPermissionErrorException as e:
-            log.error("Could not create config file at '{}'. Permission denied.".format(e.path))
+            log.error("Could not create config file at '%s'. Permission denied.", e.path)
             sys.exit(E_CONFIG_FILE_PERMISSION_DENIED)
 
         print("The configuration file got successfully created at: {}".format(path))

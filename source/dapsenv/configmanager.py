@@ -22,7 +22,6 @@ import os
 from dapsenv.exceptions import InvalidConfigTypeException, ConfigFilePermissionErrorException, \
                                ConfigFileNotCreatedException, ConfigFileAlreadyExistsException, \
                                ConfigFileCreationPermissionErrorException
-from dapsenv.logmanager import log
 from os.path import expanduser, isfile
 
 _search_pattern = re.compile("(?!#)(?P<key>[\w\d]+)\s*=\s*(?P<value>.*)")
