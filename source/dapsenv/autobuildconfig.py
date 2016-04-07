@@ -24,56 +24,56 @@ from lxml.etree import XMLSyntaxError
 
 class AutoBuildConfig:
 
-	def __init__(self, path):
-		"""Initializes the AutoBuildConfig class
+    def __init__(self, path):
+        """Initializes the AutoBuildConfig class
 
-		:param string path: The path to the auto build config file
-		"""
+        :param string path: The path to the auto build config file
+        """
 
-		self._dcfiles_pattern = re.compile("DC\-[a-zA-Z\-_]+")
+        self._dcfiles_pattern = re.compile("DC\-[a-zA-Z\-_]+")
 
-		self._path = path
-		self.parse()
+        self._path = path
+        self.parse()
 
-	def parse(self):
-		"""Parses the given auto build config file
-		"""
+    def parse(self):
+        """Parses the given auto build config file
+        """
 
-		try:
-			self._tree = etree.parse(self._path)
-		except XMLSyntaxError as e:
-			raise AutoBuildConfigSyntaxErrorException(self._path, e)
-		except IOError:
-			raise AutoBuildConfigNotFound(self._path)
+        try:
+            self._tree = etree.parse(self._path)
+        except XMLSyntaxError as e:
+            raise AutoBuildConfigSyntaxErrorException(self._path, e)
+        except IOError:
+            raise AutoBuildConfigNotFound(self._path)
 
-	def fetchProjects(self):
-		"""returns all 'set' elements as a well formed structure
+    def fetchProjects(self):
+        """returns all 'set' elements as a well formed structure
 
-		:return OrderedDict: a structure with all projects and their details
-		"""
+        :return OrderedDict: a structure with all projects and their details
+        """
 
-		data = OrderedDict()
-		projects = self._tree.findall("set")
-		
-		for index, project in enumerate(projects):
-			project_name = project.attrib["id"]
-			dc_files = project.find("dcfiles").text
-			vcs_data = project.find("vcs")
+        data = OrderedDict()
+        projects = self._tree.findall("set")
+        
+        for index, project in enumerate(projects):
+            project_name = project.attrib["id"]
+            dc_files = project.find("dcfiles").text
+            vcs_data = project.find("vcs")
 
-			data[index] = {}
-			data[index]["project"] = project_name
-			data[index]["dc_files"] = self._parse_dc_files(dc_files)
-			data[index]["vcs"] = vcs_data.attrib["type"]
-			data[index]["vcs_branch"] = vcs_data.attrib["branch"]
-			data[index]["vcs_repodir"] = vcs_data.find("checkout").text
-			data[index]["vcs_lastrev"] = vcs_data.find("lastrev").text
+            data[index] = {}
+            data[index]["project"] = project_name
+            data[index]["dc_files"] = self._parse_dc_files(dc_files)
+            data[index]["vcs"] = vcs_data.attrib["type"]
+            data[index]["vcs_branch"] = vcs_data.attrib["branch"]
+            data[index]["vcs_repodir"] = vcs_data.find("checkout").text
+            data[index]["vcs_lastrev"] = vcs_data.find("lastrev").text
 
-		return data
+        return data
 
-	def _parse_dc_files(self, dc_files):
-		"""Remove all trash characters from the 'dcfiles' element
+    def _parse_dc_files(self, dc_files):
+        """Remove all trash characters from the 'dcfiles' element
 
-		:return list: A list with all DC files
-		"""
+        :return list: A list with all DC files
+        """
 
-		return self._dcfiles_pattern.findall(dc_files)
+        return self._dcfiles_pattern.findall(dc_files)
