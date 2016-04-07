@@ -1,2 +1,6 @@
 pytest >= 2.8
 mock
+asyncio
+websockets
+lxml >= 3.3.5
+docker-py

@@ -33,6 +33,7 @@ class ArgParser:
 
         self.addGlobalOptions()
         self.addConfigCommand()
+        self.addDaemonCommand()
 
     def print_help(self):
         self.parser.print_help()
@@ -93,4 +94,14 @@ class ArgParser:
 
         cmd.add_argument(
             "--value", action="store", help="Sets a new value for a property."
+        )
+
+    def addDaemonCommand(self):
+        cmd = self.cmdSubParser.add_parser(
+            "daemon", aliases=["d"], help="This command starts a daemon which takes care of " \
+            "the documentation building process."
+        )
+
+        cmd.add_argument(
+            "--no-output", "-n", action="store_true", help="Hides the daemon output."
         )

@@ -16,4 +16,19 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
+from os import path
+
+# specifies the current version of this program
 __version__ = "1.0.0"
+
+# the default pull interval for the daemon
+DAEMON_DEFAULT_INTERVAL=300
+
+# the directory where a repository should be copied in a container
+CONTAINER_REPO_DIR="/tmp/build"
+
+# the name of the docker image
+CONTAINER_IMAGE="mschnitzer/dapsenv"
+
+# source directory of this python project
+SOURCE_DIR=path.dirname(path.realpath(__file__))

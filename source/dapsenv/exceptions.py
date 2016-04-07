@@ -18,7 +18,9 @@
 
 import sys
 from dapsenv.exitcodes import E_INVALID_CLI, E_NO_IMPLEMENTATION_FOUND, E_CONFIG_PROP_NOT_FOUND, \
-                              E_CONFIG_FILE_PERMISSION_DENIED, E_CONFIG_FILE_NOT_CREATED
+                              E_CONFIG_FILE_PERMISSION_DENIED, E_CONFIG_FILE_NOT_CREATED, \
+                              E_CONFIG_AUTOBUILD_ERROR, E_AUTOBUILDCONFIG_SYNTAX_ERROR, \
+                              E_AUTOBUILDCONFIG_NOT_FOUND, E_NOT_DOCKER_GROUP_MEMBER
 from dapsenv.logmanager import log
 
 class DapsEnvException(Exception):
@@ -61,3 +63,69 @@ class ConfigFileCreationPermissionErrorException(DapsEnvException):
 class ConfigFileAlreadyExistsException(DapsEnvException):
     def __init__(self, path):
         self.path = path
+
+class AutoBuildConfigurationErrorException(DapsEnvException):
+    def __init__(self):
+        log.error("The property 'daps_autobuild_config' is not configured in the configuration " \
+            "file.")
+        sys.exit(E_CONFIG_AUTOBUILD_ERROR)
+
+class AutoBuildConfigSyntaxErrorException(DapsEnvException):
+    def __init__(self, path, error):
+        log.error("The auto build configuration file '{}' is invalid. Error: {}".format(
+            path, error
+        ))
+        sys.exit(E_AUTOBUILDCONFIG_SYNTAX_ERROR)
+
+class AutoBuildConfigNotFound(DapsEnvException):
+    def __init__(self, path):
+        log.error("The auto build config file '{}' could not be found.".format(path))
+        sys.exit(E_AUTOBUILDCONFIG_NOT_FOUND)
+
+class UserNotInDockerGroupException(DapsEnvException):
+    def __init__(self):
+        log.error("The current user is not a member of the 'docker' group. If you recently " \
+            "added yourself to the 'docker' group, try to logout and back in again.")
+        sys.exit(E_NOT_DOCKER_GROUP_MEMBER)
+
+class ContainerNotSpawnedException(DapsEnvException):
+    pass
+
+class ContainerAlreadySpawnedException(DapsEnvException):
+    pass
+
+class ContainerPreparationMissingException(DapsEnvException):
+    pass
+
+class ContainerBuildFileNotAvailableException(DapsEnvException):
+    pass
+
+class UnexpectedStderrOutputException(DapsEnvException):
+    def __init__(self, command, stderr):
+        self.command = command
+        self.stderr = stderr
+
+    def __str__(self):
+        log.error("Unexpected stderr for command '{}' caught: {}".format(
+            self.command, self.stderr
+        ))
+
+class GitInvalidRepoException(DapsEnvException):
+    def __init__(self, repo):
+        self.repo = repo
+        self.message = "Path '{}' is not a git directory!".format(self.repo)
+
+    def __str__(self):
+        log.error(self.message)
+
+class GitInvalidBranchName(DapsEnvException):
+    def __init__(self, repo, branch):
+        self.repo = repo
+        self.branch = branch
+        
+        self.message = "Branch '{}' could not be found in repository '{}'.".format(
+            self.repo, self.branch
+        )
+
+    def __str__(self):
+        log.error(self.message)
