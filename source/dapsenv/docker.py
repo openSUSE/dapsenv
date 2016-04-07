@@ -22,7 +22,6 @@ import time
 from collections import OrderedDict
 from dapsenv.exceptions import ContainerNotSpawnedException, ContainerAlreadySpawnedException, \
                                ContainerPreparationMissingException, \
-                               ContainerBuildFileNotAvailableException, \
                                UnexpectedStderrOutputException
 from dapsenv.general import CONTAINER_REPO_DIR, CONTAINER_IMAGE, SOURCE_DIR
 
@@ -42,7 +41,7 @@ class Container:
         if self._spawned:
             raise ContainerAlreadySpawnedException()
 
-        cmd = "docker run -d mschnitzer/dapsenv /bin/sh -c \"while true;do sleep 1;done\""
+        cmd = "docker run -d {} /bin/sh -c \"while true;do sleep 1;done\"".format(CONTAINER_IMAGE)
         process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE)
 
         self._spawned = True
@@ -197,7 +196,6 @@ class Container:
                 dc_file, f, self.getContainerRepoPath(), self._repodir
             )
             res = self.execute(cmd)
-            print(res)
 
             cmd = "cat /tmp/build_status"
             status = self.execute(cmd)

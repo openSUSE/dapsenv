@@ -16,7 +16,6 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
-import asyncio
 import dapsenv.configmanager as configmanager
 import dapsenv.git as Git
 import grp
@@ -102,7 +101,7 @@ class Daemon(Action):
                 container.prepare(projects[i]["vcs_repodir"])
 
                 # building the documentation
-                result = container.build_documentation("DC-suse-openstack-cloud-admin", ["html"])
+                container.build_documentation("DC-suse-openstack-cloud-admin", ["html"])
 
                 # kill and delete container from the registry
                 container.kill()

@@ -16,7 +16,6 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
-import os
 import sys
 from dapsenv.argparser import ArgParser
 from dapsenv.exceptions import InvalidCommandLineException, InvalidActionException

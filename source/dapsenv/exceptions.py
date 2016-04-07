@@ -72,14 +72,14 @@ class AutoBuildConfigurationErrorException(DapsEnvException):
 
 class AutoBuildConfigSyntaxErrorException(DapsEnvException):
     def __init__(self, path, error):
-        log.error("The auto build configuration file '{}' is invalid. Error: {}".format(
+        log.error("The auto build configuration file '%s' is invalid. Error: %s", \
             path, error
-        ))
+        )
         sys.exit(E_AUTOBUILDCONFIG_SYNTAX_ERROR)
 
 class AutoBuildConfigNotFound(DapsEnvException):
     def __init__(self, path):
-        log.error("The auto build config file '{}' could not be found.".format(path))
+        log.error("The auto build config file '%s' could not be found.", path)
         sys.exit(E_AUTOBUILDCONFIG_NOT_FOUND)
 
 class UserNotInDockerGroupException(DapsEnvException):
@@ -106,9 +106,9 @@ class UnexpectedStderrOutputException(DapsEnvException):
         self.stderr = stderr
 
     def __str__(self):
-        log.error("Unexpected stderr for command '{}' caught: {}".format(
+        log.error("Unexpected stderr for command '%s' caught: %s", \
             self.command, self.stderr
-        ))
+        )
 
 class GitInvalidRepoException(DapsEnvException):
     def __init__(self, repo):
@@ -122,7 +122,7 @@ class GitInvalidBranchName(DapsEnvException):
     def __init__(self, repo, branch):
         self.repo = repo
         self.branch = branch
-        
+
         self.message = "Branch '{}' could not be found in repository '{}'.".format(
             self.repo, self.branch
         )
