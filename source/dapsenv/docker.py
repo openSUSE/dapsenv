@@ -116,7 +116,7 @@ class Container:
                 count += 1
                 time.sleep(1)
 
-        raise ContainerPreparationErrorException(
+        raise ContainerPreparationMissingException(
             "/tmp/build.sh is not available inside the container."
         )
 
@@ -195,7 +195,7 @@ class Container:
             cmd = "/tmp/build.sh {} {} {} {}".format(
                 dc_file, f, self.getContainerRepoPath(), self._repodir
             )
-            res = self.execute(cmd)
+            self.execute(cmd)
 
             cmd = "cat /tmp/build_status"
             status = self.execute(cmd)

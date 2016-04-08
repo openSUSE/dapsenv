@@ -18,7 +18,7 @@
 
 import shlex
 import subprocess
-from dapsenv.exceptions import GitInvalidRepoException
+from dapsenv.exceptions import GitInvalidRepoException, GitInvalidBranchName
 
 class Repository:
     def __init__(self, repo):
