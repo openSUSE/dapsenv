@@ -19,6 +19,7 @@
 import shlex
 import subprocess
 from dapsenv.exceptions import GitInvalidRepoException, GitInvalidBranchName
+from dapsenv.logmanager import log
 
 class Repository:
     def __init__(self, repo):
@@ -59,9 +60,10 @@ class Repository:
 
         return process.stdout.read().decode("utf-8")[:-1]
 
-    def pull(self, force=False):
+    def pull(self, branch, force=False):
         """Pulls new commits from the git server
 
+        :param string branch: The branch which should be updated
         :param bool force: Forces the pull
         """
 
@@ -69,9 +71,24 @@ class Repository:
         if force:
             options = " --force"
 
-        subprocess.Popen(
-            shlex.split("git -C {} pull{}".format(self.getRepoPath(), options)),
-        )
+        # switch to the specified branch to update it
+        self.checkout(branch)
+
+        # perform 'pull' on branch
+        with open("/dev/null", "w") as devnull:
+            cmd = "git -C {} pull{}".format(self.getRepoPath(), options)
+
+            process = subprocess.Popen(
+                shlex.split(cmd),
+                stdout=devnull,
+                stderr=subprocess.PIPE
+            )
+
+            # if 'git pull' throws errors, we only skip the "Cannot fast-forward" messages
+            # because this might happen often and in the end it doesn't matter for the project
+            stderr = process.stderr.read().decode("utf-8")
+            if "fatal: Cannot fast-forward" not in stderr and stderr:
+                log.error("Received stderr in '{}': %s", stderr)
 
     def getLastCommitHash(self, branch):
         """Fetches the last commit hash of a branch

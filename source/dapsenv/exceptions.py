@@ -129,3 +129,13 @@ class GitInvalidBranchName(DapsEnvException):
 
     def __str__(self):
         log.error(self.message)
+
+class ContainerFileCreationFailed(DapsEnvException):
+    def __init__(self, file_name):
+        self.file_name = file_name
+        self.message = "Internal Error: File '{}' could not be created inside a container!".format(
+            file_name
+        )
+
+    def __str__(self):
+        log.error(self.message)

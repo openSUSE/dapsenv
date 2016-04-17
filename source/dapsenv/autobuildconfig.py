@@ -65,8 +65,13 @@ class AutoBuildConfig:
             data[index]["dc_files"] = self._parse_dc_files(dc_files)
             data[index]["vcs"] = vcs_data.attrib["type"]
             data[index]["vcs_branch"] = vcs_data.attrib["branch"]
+            data[index]["vcs_type"] = vcs_data.attrib["type"]
             data[index]["vcs_repodir"] = vcs_data.find("checkout").text
             data[index]["vcs_lastrev"] = vcs_data.find("lastrev").text
+            data[index]["maintainer"] = project.find("maintainer").text
+            data[index]["meta"] = project.attrib["meta"]
+            data[index]["remarks"] = project.attrib["remarks"]
+            data[index]["draft"] = project.attrib["draft"]
 
         return data
 

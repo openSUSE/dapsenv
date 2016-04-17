@@ -24,6 +24,9 @@ __version__ = "1.0.0"
 # the default pull interval for the daemon
 DAEMON_DEFAULT_INTERVAL=300
 
+# max docker containers default value
+DAEMON_DEFAULT_MAX_CONTAINERS=15
+
 # the directory where a repository should be copied in a container
 CONTAINER_REPO_DIR="/tmp/build"
 
@@ -32,3 +35,9 @@ CONTAINER_IMAGE="mschnitzer/dapsenv"
 
 # source directory of this python project
 SOURCE_DIR=path.dirname(path.realpath(__file__))
+
+# home directory
+HOME_DIR="{}/.dapsenv".format(path.expanduser("~"))
+
+# api server default port
+API_SERVER_DEFAULT_PORT=5555

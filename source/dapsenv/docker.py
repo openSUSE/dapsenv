@@ -16,14 +16,16 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
+import os
 import shlex
 import subprocess
 import time
 from collections import OrderedDict
 from dapsenv.exceptions import ContainerNotSpawnedException, ContainerAlreadySpawnedException, \
                                ContainerPreparationMissingException, \
-                               UnexpectedStderrOutputException
-from dapsenv.general import CONTAINER_REPO_DIR, CONTAINER_IMAGE, SOURCE_DIR
+                               UnexpectedStderrOutputException, ContainerFileCreationFailed
+from dapsenv.general import CONTAINER_REPO_DIR, CONTAINER_IMAGE, SOURCE_DIR, HOME_DIR
+from random import randint
 
 class Container:
 
@@ -41,7 +43,7 @@ class Container:
         if self._spawned:
             raise ContainerAlreadySpawnedException()
 
-        cmd = "docker run -d {} /bin/sh -c \"while true;do sleep 1;done\"".format(CONTAINER_IMAGE)
+        cmd = "docker run -t -d {} /bin/sh -c \"while true;do sleep 1;done\"".format(CONTAINER_IMAGE)
         process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE)
 
         self._spawned = True
@@ -159,6 +161,21 @@ class Container:
         cmd = "docker cp {} {}:{}".format(file_name, self.getContainerID(), destination)
         subprocess.Popen(shlex.split(cmd), stdout=devnull)
 
+    def fetch(self, file_name, destination):
+        """Fetches a file from the container
+
+        :param string file: The file/directory in the docker container
+        :param string destination: The destination where the file should be copied
+        """
+
+        if not self._spawned:
+            raise ContainerNotSpawnedException()
+
+        devnull = open("/dev/null", "w")
+
+        cmd = "docker cp {}:{} {}".format(self.getContainerID(), file_name, destination)
+        subprocess.Popen(shlex.split(cmd), stdout=devnull)
+
     def fileAvailable(self, file_name):
         """Checks if a file is available inside the container
 
@@ -175,7 +192,42 @@ class Container:
 
         return False
 
-    def build_documentation(self, dc_file, formats):
+    def fileCreate(self, file_name, content):
+        """Creates a file inside the container
+
+        :param string file_name: The file path
+        :param string content: The content of the file
+        """
+
+        if not self._spawned:
+            raise ContainerNotSpawnedException()
+
+        tmp_file_name = "container_file_creation_{}".format(randint(10000000,99999999))
+        tmp_file_path = "{}/tmp/{}".format(HOME_DIR, tmp_file_name)
+
+        # write tmp file
+        with open(tmp_file_path, "w") as f:
+            f.write(content)
+
+        # copy file into the container
+        self.put(tmp_file_path, file_name)
+
+        # wait until the file was copied into the container
+        count = 0
+        while count < 10:
+            if self.fileAvailable(file_name):
+                break
+
+            count += 1
+            time.sleep(1)
+
+        if count == 10:
+            raise ContainerFileCreationFailed(file_name)
+
+        # remove temporary file
+        os.remove(tmp_file_path)
+
+    def buildDocumentation(self, dc_file, formats):
         """Trys to build the documentation
 
         :param string dc_file: The name of the DC file
@@ -192,6 +244,8 @@ class Container:
         results = OrderedDict()
 
         for index, f in enumerate(formats):
+            start = int(time.time())
+
             cmd = "/tmp/build.sh {} {} {} {}".format(
                 dc_file, f, self.getContainerRepoPath(), self._repodir
             )
@@ -200,13 +254,13 @@ class Container:
             cmd = "cat /tmp/build_status"
             status = self.execute(cmd)
 
-            if len(status["stderr"]):
+            if status["stderr"]:
                 raise UnexpectedStderrOutputException(cmd, status["stderr"])
 
             cmd = "cat /tmp/build_log"
             log = self.execute(cmd)
 
-            if len(status["stderr"]):
+            if status["stderr"]:
                 raise UnexpectedStderrOutputException(cmd, log["stderr"])
 
             if "success" in status["stdout"]:
@@ -219,6 +273,7 @@ class Container:
             results[index]["format"] = f
             results[index]["build_log"] = log["stdout"]
             results[index]["build_status"] = result
+            results[index]["compile_time"] = int(time.time()) - start
 
         return results
 
