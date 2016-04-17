@@ -18,7 +18,6 @@
 
 import asyncio
 import copy
-import dapsenv.apiserver as apiserver
 import dapsenv.configmanager as configmanager
 import dapsenv.git as Git
 import grp

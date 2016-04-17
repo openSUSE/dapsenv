@@ -53,5 +53,5 @@ def execute(args):
         # initialize class
         instance = getattr(module, class_name)()
         instance.execute(args)
-    except ImportError:
+    except ImportError as e:
         raise InvalidActionException(action)
