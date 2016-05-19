@@ -31,7 +31,6 @@ if [ $? -eq 0 ]; then
   # this will be used for DAPSEnv
   PRODUCT=$(xmlstarlet sel -t -v '(/*/_:info/_:productname|/*/*/productname)[1]' $3/build/.profiled/*/$MAIN)
   PRODUCT_N=$(xmlstarlet sel -t -v '(/*/_:info/_:productnumber|/*/*/productnumber)[1]' $3/build/.profiled/*/$MAIN)
-  #GUIDE=$(xmlstarlet sel -N _=http//docbook.org/ns/docbook -t -v '(/_:*/_:title|/_:*/_:info/_:title|/*/title|/*/*/title)[1]' $3/build/.profiled/*/$MAIN)
   GUIDE=$(xsltproc /tmp/guidename.xsl $3/build/.profiled/*/$MAIN)
   echo "{ \"product\": \"$PRODUCT\", \"productnumber\": \"$PRODUCT_N\", \"guide\": \"$GUIDE\" }" > /tmp/doc_info.json
 
