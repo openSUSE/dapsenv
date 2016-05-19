@@ -54,6 +54,8 @@ class Daemon(Action):
             configmanager.get_prop("daps_autobuild_config")
         )
 
+        self.projects = self.autoBuildConfig.fetchProjects()
+
         # load daemon settings
         self.loadDaemonSettings()
 
@@ -77,7 +79,10 @@ class Daemon(Action):
 
         while True:
             # wait until the client sends data to the API server
-            data = yield from websocket.recv()
+            try:
+                data = yield from websocket.recv()
+            except websockets.exceptions.ConnectionClosed:
+                return
 
             try:
                 # parse the sent data as json
@@ -206,27 +211,27 @@ class Daemon(Action):
         """Goes through all specified repositories and updates those
         """
 
-        projects = self.autoBuildConfig.fetchProjects()
-        for i in projects:
-            if not "repo" in projects[i]:
-                projects[i]["repo"] = Git.Repository(projects[i]["vcs_repodir"])
+        for i in self.projects:
+            if not "repo" in self.projects[i]:
+                self.projects[i]["repo"] = Git.Repository(self.projects[i]["vcs_repodir"])
 
             # pull new commits into repository
-            projects[i]["repo"].pull(projects[i]["vcs_branch"], force=True)
+            self.projects[i]["repo"].pull(self.projects[i]["vcs_branch"], force=True)
 
             # fetch current commit hash from branch
-            commit = projects[i]["repo"].getLastCommitHash(projects[i]["vcs_branch"])
+            commit = self.projects[i]["repo"].getLastCommitHash(self.projects[i]["vcs_branch"])
 
             # check if the last commit hash got changed
-            if projects[i]["vcs_lastrev"] != commit:
+            if self.projects[i]["vcs_lastrev"] != commit:
                 # update to the new commit hash
-                projects[i]["vcs_lastrev"] = commit
+                self.projects[i]["vcs_lastrev"] = commit[:]
 
                 # start and prepare a container in a new thread
-                for dc_file in projects[i]["dc_files"]:
+                for dc_file in self.projects[i]["dc_files"]:
                     self._jobs.put({
-                        "project": copy.deepcopy(projects[i]),
-                        "dc_file": dc_file[:]
+                        "project": copy.deepcopy(self.projects[i]),
+                        "dc_file": dc_file[:],
+                        "commit": commit
                     })
 
     def _process(self, project_info, dc_file):
@@ -236,21 +241,24 @@ class Daemon(Action):
         :param string dc_file: DC what should get built
         """
 
-        print(project_info)
-        print(dc_file)
-
         # create container
         container = Container()
         container.spawn()
         container.prepare(project_info["vcs_repodir"])
 
         # building the documentation
-        result = container.buildDocumentation(dc_file, ["html"])
+        result = container.buildDocumentation(dc_file, ["pdf"])
 
         for entry in result:
             if result[entry]["build_status"]:
+                # parse the documentation info
+                product = json.loads(container.execute("cat /tmp/doc_info.json")["stdout"])
+                result[entry]["product"] = product["product"]
+                result[entry]["productnumber"] = product["productnumber"]
+                result[entry]["guide"] = product["guide"]
+
                 # generate a build info file for the documentation archive
-                container.fileCreate("/tmp/build_info.json", json.dumps(result))
+                container.fileCreate("/tmp/build_info.json", json.dumps(result[entry]))
 
                 # add build info file to documentation archive
                 container.execute("tar -C /tmp --append --file=/tmp/documentation.tar build_info.json")
@@ -259,13 +267,18 @@ class Daemon(Action):
                 container.execute("gzip /tmp/documentation.tar")
 
                 # copy compiled documentation into the builds/ directory of the user
-                file_name = "{}_{}_{}.tar.gz".format(int(time.time()), dc_file[3:], "html")
+                file_name = "{}_{}_{}.tar.gz".format(int(time.time()), dc_file[3:], "pdf")
                 container.fetch("/tmp/documentation.tar.gz", "{}/builds/{}".format(
                     HOME_DIR, file_name
                 ))
 
+                # update amount of running builds
+                self._daemon_info_lock.acquire()
+                self._daemon_info["running_builds"] -= 1
+                self._daemon_info_lock.release()
+
         # kill and delete container from the registry
-        container.kill()
+        #container.kill()
 
     def _print(self, message):
         """Prints messages to the CLI

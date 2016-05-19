@@ -44,7 +44,9 @@ class Container:
             raise ContainerAlreadySpawnedException()
 
         cmd = "docker run -t -d {} /bin/sh -c \"while true;do sleep 1;done\"".format(CONTAINER_IMAGE)
-        process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE)
+
+        with open("/dev/null", "w") as devnull:
+            process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=devnull)
 
         self._spawned = True
         self._container_id = process.stdout.read().decode("utf-8")[:-1]
@@ -107,6 +109,7 @@ class Container:
         self.execute("mkdir -p {}".format(CONTAINER_REPO_DIR))
         self.put(repopath, CONTAINER_REPO_DIR)
         self.put("{}/data/build.sh".format(SOURCE_DIR), "/tmp")
+        self.put("{}/data/guidename.xsl".format(SOURCE_DIR), "/tmp")
 
         # a timing issue appears sometimes - that's why we need to make sure that the
         # file is really copied over before we go ahead
