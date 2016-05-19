@@ -108,8 +108,12 @@ class Container:
 
         self.execute("mkdir -p {}".format(CONTAINER_REPO_DIR))
         self.put(repopath, CONTAINER_REPO_DIR)
+        # TODO: we should copy the complete data dir in the future, not single
+        # files.
         self.put("{}/data/build.sh".format(SOURCE_DIR), "/tmp")
         self.put("{}/data/guidename.xsl".format(SOURCE_DIR), "/tmp")
+        self.put("{}/data/productname.xsl".format(SOURCE_DIR), "/tmp")
+        self.put("{}/data/productnumber.xsl".format(SOURCE_DIR), "/tmp")
 
         # a timing issue appears sometimes - that's why we need to make sure that the
         # file is really copied over before we go ahead
