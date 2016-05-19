@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 
   Purpose:
-    Returns productname of 
+    Returns productnumber of the guide
 
   Author(s):  Thomas Schraitle <toms@opensuse.org>
 
