@@ -17,12 +17,14 @@
  <xsl:template match="text()"/>
 
  <xsl:template match="/">
+  <xsl:variable name="db5.set" select="d:set/d:info/d:productnumber[1]"/>
   <xsl:variable name="db5.book" select="d:book/d:info/d:productnumber[1]"/>
   <xsl:variable name="db5.article" select="d:article/d:info/d:productnumber[1]"/>
-  <xsl:variable name="db5" select="($db5.book | $db5.article)[1]"/>
+  <xsl:variable name="db5" select="($db5.set | $db5.book | $db5.article)[1]"/>
+  <xsl:variable name="db4.set" select="set/setinfo/productnumber[1]"/>
   <xsl:variable name="db4.book" select="book/bookinfo/productnumber[1]"/>
   <xsl:variable name="db4.article" select="article/articleinfo/productnumber[1]"/>
-  <xsl:variable name="db4" select="($db4.book | $db4.article)[1]"/>
+  <xsl:variable name="db4" select="($db4.set | $db4.book | $db4.article)[1]"/>
 
   <xsl:choose>
    <xsl:when test="$db5"><xsl:value-of select="normalize-space($db5)"/></xsl:when>
