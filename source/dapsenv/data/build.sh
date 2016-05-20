@@ -29,10 +29,10 @@ if [ $? -eq 0 ]; then
 
   # determine some product information and put it into /tmp/doc_info.json as JSON string
   # this will be used for DAPSEnv
-  PRODUCT=$(xmlstarlet sel -t -v '(/*/_:info/_:productname|/*/*/productname)[1]' $3/build/.profiled/*/$MAIN)
-  PRODUCT_N=$(xmlstarlet sel -t -v '(/*/_:info/_:productnumber|/*/*/productnumber)[1]' $3/build/.profiled/*/$MAIN)
+  PRODUCT=$(xsltproc /tmp/productname.xsl $3/build/.profiled/*/$MAIN)
+  PRODUCT_NUMBER=$(xsltproc /tmp/productnumber.xsl $3/build/.profiled/*/$MAIN)
   GUIDE=$(xsltproc /tmp/guidename.xsl $3/build/.profiled/*/$MAIN)
-  echo "{ \"product\": \"$PRODUCT\", \"productnumber\": \"$PRODUCT_N\", \"guide\": \"$GUIDE\" }" > /tmp/doc_info.json
+  echo "{ \"product\": \"$PRODUCT\", \"productnumber\": \"$PRODUCT_NUMBER\", \"guide\": \"$GUIDE\" }" > /tmp/doc_info.json
 
   echo "success" > $STATUS_FILE
   exit 0
