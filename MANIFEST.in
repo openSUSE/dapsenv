@@ -1,5 +1,6 @@
 include source/dapsenv/templates/dapsenv.conf
 include source/dapsenv/data/build.sh
+include source/dapsenv/data/cleanup.sh
 include source/dapsenv/data/guidename.xsl
 include source/dapsenv/data/productname.xsl
 include source/dapsenv/data/productnumber.xsl

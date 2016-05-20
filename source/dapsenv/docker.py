@@ -109,6 +109,7 @@ class Container:
         self.execute("mkdir -p {}".format(CONTAINER_REPO_DIR))
         self.put(repopath, CONTAINER_REPO_DIR)
         self.put("{}/data/build.sh".format(SOURCE_DIR), "/tmp")
+        self.put("{}/data/cleanup.sh".format(SOURCE_DIR), "/tmp")
         self.put("{}/data/guidename.xsl".format(SOURCE_DIR), "/tmp")
         self.put("{}/data/productname.xsl".format(SOURCE_DIR), "/tmp")
         self.put("{}/data/productnumber.xsl".format(SOURCE_DIR), "/tmp")
@@ -217,7 +218,7 @@ class Container:
         # copy file into the container
         self.put(tmp_file_path, file_name)
 
-        # wait until the file was copied into the container
+        # wait until the file has been copied into the container
         count = 0
         while count < 10:
             if self.fileAvailable(file_name):
@@ -232,12 +233,12 @@ class Container:
         # remove temporary file
         os.remove(tmp_file_path)
 
-    def buildDocumentation(self, dc_file, formats):
-        """Trys to build the documentation
+    def buildDocumentation(self, dc_file, build_format):
+        """Tries to build the documentation
 
         :param string dc_file: The name of the DC file
-        :param list formats: A list of formats what should be built (like html, pdf etc.)
-        :return OrderedDict: A dictionary with the build results
+        :param string build_format: The format what should be built (like html, pdf etc.)
+        :return dict: A dictionary with the build results
         """
 
         if not self._spawned:
@@ -246,41 +247,61 @@ class Container:
         if not self._prepdone:
             raise ContainerPreparationMissingException()
 
-        results = OrderedDict()
+        data = {}
 
-        for index, f in enumerate(formats):
-            start = int(time.time())
+        # save start time
+        start = int(time.time())
 
-            cmd = "/tmp/build.sh {} {} {} {}".format(
-                dc_file, f, self.getContainerRepoPath(), self._repodir
-            )
-            self.execute(cmd)
+        # start build process
+        cmd = "/tmp/build.sh {} {} {} {}".format(
+            dc_file, build_format, self.getContainerRepoPath(), self._repodir
+        )
+        self.execute(cmd)
 
-            cmd = "cat /tmp/build_status"
-            status = self.execute(cmd)
+        # get build status (success or error)
+        status = self.execute("cat /tmp/build_status")
 
-            if status["stderr"]:
-                raise UnexpectedStderrOutputException(cmd, status["stderr"])
+        # raise exception if something went wrong with the last command
+        if status["stderr"]:
+            raise UnexpectedStderrOutputException(cmd, status["stderr"])
 
-            cmd = "cat /tmp/build_log"
-            log = self.execute(cmd)
+        # get build output
+        log = self.execute("cat /tmp/build_log")
 
-            if status["stderr"]:
-                raise UnexpectedStderrOutputException(cmd, log["stderr"])
+        # raise exception if something went wrong with the last command
+        if log["stderr"]:
+            raise UnexpectedStderrOutputException(cmd, log["stderr"])
 
-            if "success" in status["stdout"]:
-                result = True
-            else:
-                result = False
+        # determine if the build was successful or not
+        if "success" in status["stdout"]:
+            result = True
+        else:
+            result = False
 
-            results[index] = {}
-            results[index]["dc_file"] = dc_file
-            results[index]["format"] = f
-            results[index]["build_log"] = log["stdout"]
-            results[index]["build_status"] = result
-            results[index]["compile_time"] = int(time.time()) - start
+        # save data to dict
+        data["dc_file"] = dc_file
+        data["format"] = build_format
+        data["build_log"] = log["stdout"]
+        data["build_status"] = result
+        data["compile_time"] = int(time.time()) - start
+        data["archive_name"] = "/tmp/documentation_{}.tar".format(build_format)
 
-        return results
+        # execute cleanup script
+        self.cleanup()
+
+        return data
+
+    def cleanup(self):
+        """Cleans the container from temporary files
+        """
+
+        if not self._spawned:
+            raise ContainerNotSpawnedException()
+
+        if not self._prepdone:
+            raise ContainerPreparationMissingException()
+
+        self.execute("/tmp/cleanup.sh")
 
     def _get_repodir(self, repopath):
         """Returns the directory name of a specified repository path

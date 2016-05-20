@@ -1,21 +1,28 @@
 #!/bin/bash
 BUILD_LOG="/tmp/build_log"
 STATUS_FILE="/tmp/build_status"
+DAPS_OPTIONS=""
+FORMAT=$2
 
-daps -vv -d /tmp/build/$4/$1 $2 &> $BUILD_LOG
+if [ "$FORMAT" = "single_html" ]; then
+  DAPS_OPTIONS = "--single"
+  FORMAT="html"
+fi
+
+daps -vv -d /tmp/build/$4/$1 $FORMAT $DAPS_OPTIONS &> $BUILD_LOG
 
 if [ $? -eq 0 ]; then
   source /tmp/build/$4/$1
 
-  ARCHIVE_NAME="documentation.tar"
+  ARCHIVE_NAME="documentation_$2.tar"
   BUILD_DIR_NAME=$(expr "$1" : '^DC\-\(.*\)$')
   if [ "$ROOTID" = "" ]; then
-    BUILD_DIR_PATH="$3/build/$BUILD_DIR_NAME/$2/$BUILD_DIR_NAME"
+    BUILD_DIR_PATH="$3/build/$BUILD_DIR_NAME/$FORMAT/$BUILD_DIR_NAME"
   else
-    BUILD_DIR_PATH="$3/build/$BUILD_DIR_NAME/$2/$ROOTID"
+    BUILD_DIR_PATH="$3/build/$BUILD_DIR_NAME/$FORMAT/$ROOTID"
   fi
 
-  if [ "$2" = "pdf" ]; then
+  if [ "$FORMAT" = "pdf" ]; then
     cd $3/build/$BUILD_DIR_NAME
     tar cfv $ARCHIVE_NAME *.pdf > /dev/null
   else

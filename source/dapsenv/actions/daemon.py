@@ -246,36 +246,43 @@ class Daemon(Action):
         container.spawn()
         container.prepare(project_info["vcs_repodir"])
 
-        # building the documentation
-        result = container.buildDocumentation(dc_file, ["pdf"])
+        # specify build formats
+        build_formats = ["html", "single_html", "pdf"]
 
-        for entry in result:
-            if result[entry]["build_status"]:
-                # parse the documentation info
-                product = json.loads(container.execute("cat /tmp/doc_info.json")["stdout"])
-                result[entry]["product"] = product["product"]
-                result[entry]["productnumber"] = product["productnumber"]
-                result[entry]["guide"] = product["guide"]
+        for f in build_formats:
+            # building the documentation
+            result = container.buildDocumentation(dc_file, f)
+            
+            archive = result["archive_name"]
+            del result["archive_name"]
+            
+            # parse the documentation info
+            product = json.loads(container.execute("cat /tmp/doc_info.json")["stdout"])
 
-                # generate a build info file for the documentation archive
-                container.fileCreate("/tmp/build_info.json", json.dumps(result[entry]))
+            # add new information to result dict
+            result["product"] = product["product"]
+            result["productnumber"] = product["productnumber"]
+            result["guide"] = product["guide"]
+    
+            # generate a build info file for the documentation archive
+            container.fileCreate("/tmp/build_info.json", json.dumps(result))
 
-                # add build info file to documentation archive
-                container.execute("tar -C /tmp --append --file=/tmp/documentation.tar build_info.json")
+            # add build info file to documentation archive
+            container.execute("tar -C /tmp --append --file={} build_info.json".format(archive))
 
-                # compress tar archive
-                container.execute("gzip /tmp/documentation.tar")
+            # compress tar archive
+            container.execute("gzip {}".format(archive))
 
-                # copy compiled documentation into the builds/ directory of the user
-                file_name = "{}_{}_{}.tar.gz".format(int(time.time()), dc_file[3:], "pdf")
-                container.fetch("/tmp/documentation.tar.gz", "{}/builds/{}".format(
-                    HOME_DIR, file_name
-                ))
+            # copy compiled documentation into the builds/ directory of the user
+            file_name = "{}_{}_{}.tar.gz".format(int(time.time()), dc_file[3:], f.replace("_", "-"))
+            container.fetch("{}.gz".format(archive), "{}/builds/{}".format(
+                HOME_DIR, file_name
+            ))
 
-                # update amount of running builds
-                self._daemon_info_lock.acquire()
-                self._daemon_info["running_builds"] -= 1
-                self._daemon_info_lock.release()
+        # update amount of running builds
+        self._daemon_info_lock.acquire()
+        self._daemon_info["running_builds"] -= 1
+        self._daemon_info_lock.release()
 
         # kill and delete container from the registry
         #container.kill()
