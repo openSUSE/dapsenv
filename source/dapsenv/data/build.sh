@@ -3,13 +3,18 @@ BUILD_LOG="/tmp/build_log"
 STATUS_FILE="/tmp/build_status"
 DAPS_OPTIONS=""
 FORMAT=$2
+FORMAT_FOLDER=""
 
 if [ "$FORMAT" = "single_html" ]; then
-  DAPS_OPTIONS = "--single"
+  DAPS_OPTIONS="--single"
   FORMAT="html"
+  FORMAT_FOLDER="single-html"
+else
+  FORMAT_FOLDER=$2
 fi
 
 daps -vv -d /tmp/build/$4/$1 $FORMAT $DAPS_OPTIONS &> $BUILD_LOG
+DAPS_CMD="daps -vv -d /tmp/build/$4/$1 $FORMAT $DAPS_OPTIONS"
 
 if [ $? -eq 0 ]; then
   source /tmp/build/$4/$1
@@ -17,9 +22,9 @@ if [ $? -eq 0 ]; then
   ARCHIVE_NAME="documentation_$2.tar"
   BUILD_DIR_NAME=$(expr "$1" : '^DC\-\(.*\)$')
   if [ "$ROOTID" = "" ]; then
-    BUILD_DIR_PATH="$3/build/$BUILD_DIR_NAME/$FORMAT/$BUILD_DIR_NAME"
+    BUILD_DIR_PATH="$3/build/$BUILD_DIR_NAME/$FORMAT_FOLDER/$BUILD_DIR_NAME"
   else
-    BUILD_DIR_PATH="$3/build/$BUILD_DIR_NAME/$FORMAT/$ROOTID"
+    BUILD_DIR_PATH="$3/build/$BUILD_DIR_NAME/$FORMAT_FOLDER/$ROOTID"
   fi
 
   if [ "$FORMAT" = "pdf" ]; then
@@ -39,7 +44,7 @@ if [ $? -eq 0 ]; then
   PRODUCT=$(xsltproc /tmp/productname.xsl $3/build/.profiled/*/$MAIN)
   PRODUCT_NUMBER=$(xsltproc /tmp/productnumber.xsl $3/build/.profiled/*/$MAIN)
   GUIDE=$(xsltproc /tmp/guidename.xsl $3/build/.profiled/*/$MAIN)
-  echo "{ \"product\": \"$PRODUCT\", \"productnumber\": \"$PRODUCT_NUMBER\", \"guide\": \"$GUIDE\" }" > /tmp/doc_info.json
+  echo "{ \"product\": \"$PRODUCT\", \"productnumber\": \"$PRODUCT_NUMBER\", \"guide\": \"$GUIDE\", \"dapscmd\": \"$DAPS_CMD\" }" > /tmp/doc_info.json
 
   echo "success" > $STATUS_FILE
   exit 0

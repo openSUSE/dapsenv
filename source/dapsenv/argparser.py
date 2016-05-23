@@ -105,3 +105,8 @@ class ArgParser:
         cmd.add_argument(
             "--no-output", "-n", action="store_true", help="Hides the daemon output."
         )
+
+        cmd.add_argument(
+            "--debug", "-d", action="store_true", help="Useful for developer to get more " \
+            "information about the Daemon process."
+        )

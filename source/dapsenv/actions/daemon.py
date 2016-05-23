@@ -45,6 +45,7 @@ class Daemon(Action):
         """
 
         self._noout = args["no_output"]
+        self._debug = args["debug"]
 
         # check requirements
         self.checkRequirements()
@@ -149,7 +150,10 @@ class Daemon(Action):
         """Starts the daemon
         """
 
-        self._print("The daemon is now running.")
+        if not self._debug:
+            self._print("The daemon is now running.")
+        else:
+            self._print("The daemon is now running in the debug mode.")
 
         # prepare queue
         self._jobs = Queue()
@@ -252,7 +256,7 @@ class Daemon(Action):
         for f in build_formats:
             # building the documentation
             result = container.buildDocumentation(dc_file, f)
-            
+
             archive = result["archive_name"]
             del result["archive_name"]
             
@@ -260,9 +264,16 @@ class Daemon(Action):
             product = json.loads(container.execute("cat /tmp/doc_info.json")["stdout"])
 
             # add new information to result dict
-            result["product"] = product["product"]
-            result["productnumber"] = product["productnumber"]
-            result["guide"] = product["guide"]
+            result.update(product)
+
+            # if debug mode is enabled, add some additional information to the
+            # build_info.json file
+            if self._debug:
+                result["container_id"] = container.getContainerID()
+            else:
+                # remove the daps command from the result dictionary, if debug mode
+                # is disabled
+                del result["dapscmd"]
     
             # generate a build info file for the documentation archive
             container.fileCreate("/tmp/build_info.json", json.dumps(result))
@@ -285,7 +296,7 @@ class Daemon(Action):
         self._daemon_info_lock.release()
 
         # kill and delete container from the registry
-        #container.kill()
+        container.kill()
 
     def _print(self, message):
         """Prints messages to the CLI
