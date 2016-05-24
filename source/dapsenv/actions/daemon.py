@@ -33,6 +33,7 @@ from dapsenv.docker import Container
 from dapsenv.exceptions import AutoBuildConfigurationErrorException, UserNotInDockerGroupException
 from dapsenv.general import DAEMON_DEFAULT_INTERVAL, HOME_DIR, DAEMON_DEFAULT_MAX_CONTAINERS, \
                             API_SERVER_DEFAULT_PORT
+from dapsenv.ircbot import IRCBot
 from dapsenv.logmanager import log
 from multiprocessing import Queue
 
@@ -44,8 +45,11 @@ class Daemon(Action):
         """@see Action.execute()
         """
 
+        self._useirc = args["use_irc"]
         self._noout = args["no_output"]
         self._debug = args["debug"]
+        self._ircbot = None
+        self._irclock = None
 
         # check requirements
         self.checkRequirements()
@@ -63,11 +67,33 @@ class Daemon(Action):
         # prepare data object
         self._prepareDataObject()
 
+        # start IRC bot
+        if self._useirc:
+            self._start_ircbot()
+
         # start api server
         self._api_server_start()
 
         # start daemon
         self.start()
+
+    def _start_ircbot(self):
+        thread = threading.Thread(target=self._thread_ircbot)
+        thread.start()
+
+    def _thread_ircbot(self):
+        # load IRC configuration
+        server = configmanager.get_prop("irc_server")
+        port = int(configmanager.get_prop("irc_server_port"))
+        channel = "#{}".format(configmanager.get_prop("irc_channel"))
+        nick = configmanager.get_prop("irc_bot_nickname")
+        user = configmanager.get_prop("irc_bot_username")
+
+        # initialize bot
+        self._ircbot = IRCBot(server, port, channel, nick, user)
+        self._irclock = threading.Lock()
+        self._ircbot.setDaemon(self)
+        self._ircbot.start()
 
     @asyncio.coroutine
     def _api_server_runtime(self, websocket, path):
@@ -365,3 +391,10 @@ class Daemon(Action):
         self._daemon_info = {
             "running_builds": 0
         }
+
+    def getStatus(self):
+        self._daemon_info_lock.acquire()
+        daemon_info = self._daemon_info.copy()
+        self._daemon_info_lock.release()
+
+        return daemon_info

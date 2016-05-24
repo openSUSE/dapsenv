@@ -103,6 +103,11 @@ class ArgParser:
         )
 
         cmd.add_argument(
+            "--use-irc", "-i", action="store_true", help="Connects to the IRC server what is " \
+            "configured in the configuration file."
+        )
+
+        cmd.add_argument(
             "--no-output", "-n", action="store_true", help="Hides the daemon output."
         )
 
