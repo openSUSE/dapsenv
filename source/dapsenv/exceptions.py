@@ -139,3 +139,19 @@ class ContainerFileCreationFailed(DapsEnvException):
 
     def __str__(self):
         log.error(self.message)
+
+class DockerRegisteryException(DapsEnvException):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        log.error(self.message)
+
+class DockerImageMissingException(DapsEnvException):
+    def __init__(self, image):
+        self.image = image
+        self.message = "Docker Image '{}' must be imported first! Run 'docker pull {}' " \
+            "to import it.".format(image, image)
+
+    def __str__(self):
+        return self.message

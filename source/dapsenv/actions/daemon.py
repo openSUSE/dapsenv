@@ -30,11 +30,13 @@ import websockets
 from dapsenv.actions.action import Action
 from dapsenv.autobuildconfig import AutoBuildConfig
 from dapsenv.docker import Container
+from dapsenv.dockerregistry import is_image_imported
 from dapsenv.exceptions import AutoBuildConfigurationErrorException, \
-                               UserNotInDockerGroupException, GitInvalidRepoException
-from dapsenv.exitcodes import E_INVALID_GIT_REPO
+                               UserNotInDockerGroupException, GitInvalidRepoException, \
+                               DockerImageMissingException
+from dapsenv.exitcodes import E_INVALID_GIT_REPO, E_DOCKER_IMAGE_MISSING
 from dapsenv.general import DAEMON_DEFAULT_INTERVAL, HOME_DIR, DAEMON_DEFAULT_MAX_CONTAINERS, \
-                            API_SERVER_DEFAULT_PORT, LOG_DIR
+                            API_SERVER_DEFAULT_PORT, LOG_DIR, CONTAINER_IMAGE
 from dapsenv.ircbot import IRCBot
 from dapsenv.logmanager import log
 from multiprocessing import Queue
@@ -58,7 +60,11 @@ class Daemon(Action):
         self._daemon_info_lock = threading.Lock()
 
         # check requirements
-        self.checkRequirements()
+        try:
+            self.checkRequirements()
+        except DockerImageMissingException as e:
+            log.error(e.message)
+            sys.exit(E_DOCKER_IMAGE_MISSING)
 
         # load auto build configuration file
         self._autoBuildConfigFile = configmanager.get_prop("daps_autobuild_config")
@@ -421,14 +427,22 @@ class Daemon(Action):
         """Check user requirements what are needed to run the daemon
         """
 
+        # check if user is in docker group
         user = pwd.getpwuid(os.getuid()).pw_name
+        user_in_group = False
 
         for group in grp.getgrall():
             if group.gr_name == "docker":
                 if user in group.gr_mem:
-                    return True
+                    user_in_group = True
+                    break
 
-        raise UserNotInDockerGroupException()
+        if not user_in_group:
+            raise UserNotInDockerGroupException()
+
+        # check if the docker image is imported
+        if not is_image_imported(CONTAINER_IMAGE):
+            raise DockerImageMissingException(CONTAINER_IMAGE)
 
     def _prepareDataObject(self):
         """This prepares the data object what contains information about running builds

@@ -16,16 +16,25 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
-E_NO_IMPLEMENTATION_FOUND=1
-E_INVALID_CLI=2
-E_CONFIG_FILE_SYNTAX_ERROR=3
-E_CONFIG_PROP_NOT_FOUND=4
-E_CONFIG_FILE_PERMISSION_DENIED=5
-E_CONFIG_FILE_NOT_CREATED=6
-E_CONFIG_FILE_ALREADY_CREATED=7
-E_CONFIG_AUTOBUILD_ERROR=8
-E_AUTOBUILDCONFIG_SYNTAX_ERROR=9
-E_AUTOBUILDCONFIG_NOT_FOUND=10
-E_NOT_DOCKER_GROUP_MEMBER=11
-E_INVALID_GIT_REPO=12
-E_DOCKER_IMAGE_MISSING=13
+import shlex
+import subprocess
+from dapsenv.exceptions import DockerRegisteryException
+
+def is_image_imported(imagename):
+    with open("/dev/null", "r") as devnull:
+        process = subprocess.Popen(
+            shlex.split("docker images -q {}".format(imagename)),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+
+        stderr = process.stderr.read().decode("utf-8")
+        stdout = process.stdout.read().decode("utf-8")
+
+        if stderr:
+            raise DockerRegisteryException(stderr)
+
+        if stdout:
+            return True
+
+    return False
