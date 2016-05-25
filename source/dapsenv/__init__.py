@@ -20,7 +20,7 @@ import os
 import sys
 from dapsenv.argparser import ArgParser
 from dapsenv.exceptions import InvalidCommandLineException, InvalidActionException
-from dapsenv.general import HOME_DIR, LOG_DIR
+from dapsenv.general import HOME_DIR, LOG_DIR, TMP_DIR, BUILDS_DIR
 from dapsenv.logmanager import set_log_level
 from importlib import import_module
 
@@ -54,6 +54,12 @@ def create_dirs():
 
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)
+
+    if not os.path.exists(TMP_DIR):
+        os.makedirs(TMP_DIR)
+
+    if not os.path.exists(BUILDS_DIR):
+        os.makedirs(BUILDS_DIR)
 
 def execute(args):
     action = args["action"]

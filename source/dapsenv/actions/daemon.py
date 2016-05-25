@@ -35,7 +35,7 @@ from dapsenv.exceptions import AutoBuildConfigurationErrorException, \
                                UserNotInDockerGroupException, GitInvalidRepoException, \
                                DockerImageMissingException
 from dapsenv.exitcodes import E_INVALID_GIT_REPO, E_DOCKER_IMAGE_MISSING
-from dapsenv.general import DAEMON_DEFAULT_INTERVAL, HOME_DIR, DAEMON_DEFAULT_MAX_CONTAINERS, \
+from dapsenv.general import DAEMON_DEFAULT_INTERVAL, BUILDS_DIR, DAEMON_DEFAULT_MAX_CONTAINERS, \
                             API_SERVER_DEFAULT_PORT, LOG_DIR, CONTAINER_IMAGE
 from dapsenv.ircbot import IRCBot
 from dapsenv.logmanager import log
@@ -330,8 +330,8 @@ class Daemon(Action):
 
                 # copy compiled documentation into the builds/ directory of the user
                 file_name = "{}_{}_{}.tar.gz".format(int(time.time()), dc_file[3:], f.replace("_", "-"))
-                container.fetch("{}.gz".format(archive), "{}/builds/{}".format(
-                    HOME_DIR, file_name
+                container.fetch("{}.gz".format(archive), "{}/{}".format(
+                    BUILDS_DIR, file_name
                 ))
 
                 self._irclock.acquire()

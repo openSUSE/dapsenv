@@ -42,5 +42,11 @@ HOME_DIR="{}/.dapsenv".format(path.expanduser("~"))
 # error log directory
 LOG_DIR="{}/.dapsenv/logs".format(path.expanduser("~"))
 
+# tmp directory
+TMP_DIR="{}/.dapsenv/tmp".format(path.expanduser("~"))
+
+# tmp directory
+BUILDS_DIR="{}/.dapsenv/builds".format(path.expanduser("~"))
+
 # api server default port
 API_SERVER_DEFAULT_PORT=5555
