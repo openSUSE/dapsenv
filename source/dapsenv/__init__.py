@@ -16,13 +16,17 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
+import os
 import sys
 from dapsenv.argparser import ArgParser
 from dapsenv.exceptions import InvalidCommandLineException, InvalidActionException
+from dapsenv.general import HOME_DIR, LOG_DIR
 from dapsenv.logmanager import set_log_level
 from importlib import import_module
 
 def main(args=None):
+    create_dirs()
+
     if not args:
         args = sys.argv[1:]
 
@@ -40,6 +44,16 @@ def main(args=None):
 
     # execute
     execute(parsed_args)
+
+def create_dirs():
+    """Creates all necessary directories
+    """
+
+    if not os.path.exists(HOME_DIR):
+        os.makedirs(HOME_DIR)
+
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR)
 
 def execute(args):
     action = args["action"]

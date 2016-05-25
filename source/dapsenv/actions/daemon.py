@@ -32,7 +32,7 @@ from dapsenv.autobuildconfig import AutoBuildConfig
 from dapsenv.docker import Container
 from dapsenv.exceptions import AutoBuildConfigurationErrorException, UserNotInDockerGroupException
 from dapsenv.general import DAEMON_DEFAULT_INTERVAL, HOME_DIR, DAEMON_DEFAULT_MAX_CONTAINERS, \
-                            API_SERVER_DEFAULT_PORT
+                            API_SERVER_DEFAULT_PORT, LOG_DIR
 from dapsenv.ircbot import IRCBot
 from dapsenv.logmanager import log
 from multiprocessing import Queue
@@ -48,8 +48,9 @@ class Daemon(Action):
         self._useirc = args["use_irc"]
         self._noout = args["no_output"]
         self._debug = args["debug"]
+        self._irc_config = {}
         self._ircbot = None
-        self._irclock = None
+        self._irclock = threading.Lock()
 
         # check requirements
         self.checkRequirements()
@@ -63,6 +64,9 @@ class Daemon(Action):
 
         # load daemon settings
         self.loadDaemonSettings()
+
+        # load irc bot config
+        self.loadIRCBotConfig()
 
         # prepare data object
         self._prepareDataObject()
@@ -82,16 +86,15 @@ class Daemon(Action):
         thread.start()
 
     def _thread_ircbot(self):
-        # load IRC configuration
-        server = configmanager.get_prop("irc_server")
-        port = int(configmanager.get_prop("irc_server_port"))
-        channel = "#{}".format(configmanager.get_prop("irc_channel"))
-        nick = configmanager.get_prop("irc_bot_nickname")
-        user = configmanager.get_prop("irc_bot_username")
-
         # initialize bot
-        self._ircbot = IRCBot(server, port, channel, nick, user)
-        self._irclock = threading.Lock()
+        self._ircbot = IRCBot(
+            self._irc_config["irc_server"],
+            self._irc_config["irc_server_port"],
+            self._irc_config["irc_channel"],
+            self._irc_config["irc_bot_nickname"],
+            self._irc_config["irc_bot_username"]
+        )
+
         self._ircbot.setDaemon(self)
         self._ircbot.start()
 
@@ -285,7 +288,7 @@ class Daemon(Action):
 
             archive = result["archive_name"]
             del result["archive_name"]
-            
+
             # parse the documentation info
             product = json.loads(container.execute("cat /tmp/doc_info.json")["stdout"])
 
@@ -301,20 +304,57 @@ class Daemon(Action):
                 # is disabled
                 del result["dapscmd"]
     
-            # generate a build info file for the documentation archive
-            container.fileCreate("/tmp/build_info.json", json.dumps(result))
+            if result["build_status"]:
+                # generate a build info file for the documentation archive
+                container.fileCreate("/tmp/build_info.json", json.dumps(result))
 
-            # add build info file to documentation archive
-            container.execute("tar -C /tmp --append --file={} build_info.json".format(archive))
+                # add build info file to documentation archive
+                container.execute("tar -C /tmp --append --file={} build_info.json".format(archive))
 
-            # compress tar archive
-            container.execute("gzip {}".format(archive))
+                # compress tar archive
+                container.execute("gzip {}".format(archive))
 
-            # copy compiled documentation into the builds/ directory of the user
-            file_name = "{}_{}_{}.tar.gz".format(int(time.time()), dc_file[3:], f.replace("_", "-"))
-            container.fetch("{}.gz".format(archive), "{}/builds/{}".format(
-                HOME_DIR, file_name
-            ))
+                # copy compiled documentation into the builds/ directory of the user
+                file_name = "{}_{}_{}.tar.gz".format(int(time.time()), dc_file[3:], f.replace("_", "-"))
+                container.fetch("{}.gz".format(archive), "{}/builds/{}".format(
+                    HOME_DIR, file_name
+                ))
+
+                self._irclock.acquire()
+
+                if self._ircbot and self._irc_config["irc_inform_build_success"]:
+                    self._ircbot.sendChannelMessage("A new build has been finished! " \
+                        "DC-File: {}, Format: {}, Output-Archive: {}".format(
+                            result["dc_file"],
+                            result["format"],
+                            file_name
+                        )
+                    )
+
+                self._irclock.release()
+            else:
+                error_log_path = "{}/build_fail_{}_{}_{}.log".format(
+                    LOG_DIR,
+                    result["dc_file"],
+                    result["format"],
+                    int(time.time())
+                )
+
+                with open(error_log_path, "w+") as f:
+                    f.write(result["build_log"])
+
+                self._irclock.acquire()
+
+                if self._ircbot and self._irc_config["irc_inform_build_fail"]:
+                    self._ircbot.sendChannelMessage("A build has failed! " \
+                        "DC-File: {}, Format: {}, Error-Log: {}".format(
+                            result["dc_file"],
+                            result["format"],
+                            error_log_path
+                        )
+                    )
+
+                self._irclock.release()
 
         # update amount of running builds
         self._daemon_info_lock.acquire()
@@ -322,7 +362,8 @@ class Daemon(Action):
         self._daemon_info_lock.release()
 
         # kill and delete container from the registry
-        container.kill()
+        if not self._debug:
+            container.kill()
 
     def _print(self, message):
         """Prints messages to the CLI
@@ -398,3 +439,14 @@ class Daemon(Action):
         self._daemon_info_lock.release()
 
         return daemon_info
+
+    def loadIRCBotConfig(self):
+        self._irc_config["irc_server"] = configmanager.get_prop("irc_server")
+        self._irc_config["irc_server_port"] = int(configmanager.get_prop("irc_server_port"))
+        self._irc_config["irc_channel"] = "#{}".format(configmanager.get_prop("irc_channel"))
+        self._irc_config["irc_bot_nickname"] = configmanager.get_prop("irc_bot_nickname")
+        self._irc_config["irc_bot_username"] = configmanager.get_prop("irc_bot_username")
+        self._irc_config["irc_inform_build_success"] = True if \
+            configmanager.get_prop("irc_inform_build_success") == "true" else False
+        self._irc_config["irc_inform_build_fail"] = True if \
+            configmanager.get_prop("irc_inform_build_fail") == "true" else False

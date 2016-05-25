@@ -39,5 +39,8 @@ SOURCE_DIR=path.dirname(path.realpath(__file__))
 # home directory
 HOME_DIR="{}/.dapsenv".format(path.expanduser("~"))
 
+# error log directory
+LOG_DIR="{}/.dapsenv/logs".format(path.expanduser("~"))
+
 # api server default port
 API_SERVER_DEFAULT_PORT=5555

@@ -13,8 +13,8 @@ else
   FORMAT_FOLDER=$2
 fi
 
-daps -vv -d /tmp/build/$4/$1 $FORMAT $DAPS_OPTIONS &> $BUILD_LOG
 DAPS_CMD="daps -vv -d /tmp/build/$4/$1 $FORMAT $DAPS_OPTIONS"
+daps -vv -d /tmp/build/$4/$1 $FORMAT $DAPS_OPTIONS &> $BUILD_LOG
 
 if [ $? -eq 0 ]; then
   source /tmp/build/$4/$1
@@ -50,4 +50,5 @@ if [ $? -eq 0 ]; then
   exit 0
 fi
 
+echo "{ \"dapscmd\": \"$DAPS_CMD\" }" > /tmp/doc_info.json
 echo "error" > $STATUS_FILE

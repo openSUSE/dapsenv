@@ -78,17 +78,11 @@ class Repository:
         with open("/dev/null", "w") as devnull:
             cmd = "git -C {} pull{}".format(self.getRepoPath(), options)
 
-            process = subprocess.Popen(
+            subprocess.Popen(
                 shlex.split(cmd),
                 stdout=devnull,
-                stderr=subprocess.PIPE
+                stderr=devnull
             )
-
-            # if 'git pull' throws errors, we only skip the "Cannot fast-forward" messages
-            # because this might happen often and in the end it doesn't matter for the project
-            stderr = process.stderr.read().decode("utf-8")
-            if "fatal: Cannot fast-forward" not in stderr and stderr:
-                log.error("Received stderr in '{}': %s", stderr)
 
     def getLastCommitHash(self, branch):
         """Fetches the last commit hash of a branch
