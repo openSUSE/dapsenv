@@ -52,7 +52,10 @@ class Daemon(Action):
         self._debug = args["debug"]
         self._irc_config = {}
         self._ircbot = None
+
+        # create locks for thread-safe communications
         self._irclock = threading.Lock()
+        self._daemon_info_lock = threading.Lock()
 
         # check requirements
         self.checkRequirements()
@@ -174,9 +177,6 @@ class Daemon(Action):
         """
 
         if self._api_server == "true":
-            # create lock for thread-safe communication
-            self._daemon_info_lock = threading.Lock()
-
             # spawn API server thread
             thread = threading.Thread(target=self._api_server_thread)
             thread.start()
