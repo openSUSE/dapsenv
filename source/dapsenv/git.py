@@ -119,7 +119,7 @@ class Repository:
         :return bool: true = is a git repository | false = is not a git repository
         """
 
-        cmd = "git rev-parse --git-dir"
+        cmd = "git -C {} rev-parse --git-dir".format(self._repopath)
         process = subprocess.Popen(
             shlex.split(cmd),
             stdout=subprocess.PIPE,

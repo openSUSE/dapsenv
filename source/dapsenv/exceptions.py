@@ -113,7 +113,7 @@ class UnexpectedStderrOutputException(DapsEnvException):
 class GitInvalidRepoException(DapsEnvException):
     def __init__(self, repo):
         self.repo = repo
-        self.message = "Path '{}' is not a git directory!".format(self.repo)
+        self.message = "Path '{}' is not a Git repository!".format(self.repo)
 
     def __str__(self):
         log.error(self.message)

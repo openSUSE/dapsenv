@@ -19,18 +19,20 @@
 import asyncio
 import copy
 import dapsenv.configmanager as configmanager
-import dapsenv.git as Git
 import grp
 import json
 import os
 import pwd
+import sys
 import threading
 import time
 import websockets
 from dapsenv.actions.action import Action
 from dapsenv.autobuildconfig import AutoBuildConfig
 from dapsenv.docker import Container
-from dapsenv.exceptions import AutoBuildConfigurationErrorException, UserNotInDockerGroupException
+from dapsenv.exceptions import AutoBuildConfigurationErrorException, \
+                               UserNotInDockerGroupException, GitInvalidRepoException
+from dapsenv.exitcodes import E_INVALID_GIT_REPO
 from dapsenv.general import DAEMON_DEFAULT_INTERVAL, HOME_DIR, DAEMON_DEFAULT_MAX_CONTAINERS, \
                             API_SERVER_DEFAULT_PORT, LOG_DIR
 from dapsenv.ircbot import IRCBot
@@ -56,11 +58,18 @@ class Daemon(Action):
         self.checkRequirements()
 
         # load auto build configuration file
+        self._autoBuildConfigFile = configmanager.get_prop("daps_autobuild_config")
         self.autoBuildConfig = self.loadAutoBuildConfig(
-            configmanager.get_prop("daps_autobuild_config")
+            self._autoBuildConfigFile
         )
 
-        self.projects = self.autoBuildConfig.fetchProjects()
+        # fetch all projects
+        try:
+            self.projects = self.autoBuildConfig.fetchProjects()
+        except GitInvalidRepoException as e:
+            log.error("Configuration error in auto build config '%s'! %s", \
+                self._autoBuildConfigFile, e.message)
+            sys.exit(E_INVALID_GIT_REPO)
 
         # load daemon settings
         self.loadDaemonSettings()
@@ -245,9 +254,6 @@ class Daemon(Action):
         """
 
         for i in self.projects:
-            if not "repo" in self.projects[i]:
-                self.projects[i]["repo"] = Git.Repository(self.projects[i]["vcs_repodir"])
-
             # pull new commits into repository
             self.projects[i]["repo"].pull(self.projects[i]["vcs_branch"], force=True)
 

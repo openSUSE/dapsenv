@@ -16,6 +16,7 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
+import dapsenv.git as Git
 import re
 from collections import OrderedDict
 from dapsenv.exceptions import AutoBuildConfigSyntaxErrorException, AutoBuildConfigNotFound
@@ -68,6 +69,7 @@ class AutoBuildConfig:
             data[index]["vcs_type"] = vcs_data.attrib["type"]
             data[index]["vcs_repodir"] = vcs_data.find("checkout").text
             data[index]["vcs_lastrev"] = vcs_data.find("lastrev").text
+            data[index]["repo"] = Git.Repository(data[index]["vcs_repodir"])
             data[index]["maintainer"] = project.find("maintainer").text
             data[index]["meta"] = project.attrib["meta"]
             data[index]["remarks"] = project.attrib["remarks"]
