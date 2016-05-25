@@ -40,6 +40,7 @@ from dapsenv.general import DAEMON_DEFAULT_INTERVAL, HOME_DIR, DAEMON_DEFAULT_MA
 from dapsenv.ircbot import IRCBot
 from dapsenv.logmanager import log
 from multiprocessing import Queue
+from socket import gethostname
 
 class Daemon(Action):
     def __init__(self):
@@ -54,6 +55,7 @@ class Daemon(Action):
         self._debug = args["debug"]
         self._irc_config = {}
         self._ircbot = None
+        self._hostname = gethostname()
 
         # create locks for thread-safe communications
         self._irclock = threading.Lock()
@@ -335,8 +337,9 @@ class Daemon(Action):
                 self._irclock.acquire()
 
                 if self._ircbot and self._irc_config["irc_inform_build_success"]:
-                    self._ircbot.sendChannelMessage("A new build has been finished! " \
+                    self._ircbot.sendChannelMessage("A new build has been finished on {}! " \
                         "DC-File: {}, Format: {}, Output-Archive: {}".format(
+                            self._hostname,
                             result["dc_file"],
                             result["format"],
                             file_name
@@ -358,8 +361,9 @@ class Daemon(Action):
                 self._irclock.acquire()
 
                 if self._ircbot and self._irc_config["irc_inform_build_fail"]:
-                    self._ircbot.sendChannelMessage("A build has failed! " \
+                    self._ircbot.sendChannelMessage("A build has failed on {}! " \
                         "DC-File: {}, Format: {}, Error-Log: {}".format(
+                            self._hostname,
                             result["dc_file"],
                             result["format"],
                             error_log_path
