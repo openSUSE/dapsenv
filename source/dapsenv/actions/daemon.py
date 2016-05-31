@@ -39,7 +39,6 @@ from dapsenv.general import DAEMON_DEFAULT_INTERVAL, BUILDS_DIR, DAEMON_DEFAULT_
                             API_SERVER_DEFAULT_PORT, LOG_DIR, CONTAINER_IMAGE
 from dapsenv.ircbot import IRCBot
 from dapsenv.logmanager import log
-from multiprocessing import Queue
 from socket import gethostname
 
 class Daemon(Action):
@@ -50,23 +49,49 @@ class Daemon(Action):
         """@see Action.execute()
         """
 
-        self._useirc = args["use_irc"]
-        self._noout = args["no_output"]
-        self._debug = args["debug"]
+        self._args = args
+
+        # load settings and prepare daemon
+        self._preperation()
+
+        # check requirements
+        self._checkDockerImage()
+
+        # start IRC bot
+        self._start_ircbot()
+
+        # start api server
+        self._api_server_start()
+
+        # start daemon
+        self.start()
+
+    def _preperation(self):
+        """Loads all settings and prepares the daemon
+        """
+
+        self._useirc = self._args["use_irc"]
+        self._noout = self._args["no_output"]
+        self._debug = self._args["debug"]
         self._irc_config = {}
         self._ircbot = None
         self._hostname = gethostname()
+
+        self._daemon_info = {
+            "jobs": [],
+            "scheduled_builds": 0,
+            "running_builds": 0
+        }
 
         # create locks for thread-safe communications
         self._irclock = threading.Lock()
         self._daemon_info_lock = threading.Lock()
 
-        # check requirements
-        try:
-            self.checkRequirements()
-        except DockerImageMissingException as e:
-            log.error(e.message)
-            sys.exit(E_DOCKER_IMAGE_MISSING)
+        # load daemon settings
+        self.loadDaemonSettings()
+
+        # load irc bot config
+        self.loadIRCBotConfig()
 
         # load auto build configuration file
         self._autoBuildConfigFile = configmanager.get_prop("daps_autobuild_config")
@@ -82,28 +107,20 @@ class Daemon(Action):
                 self._autoBuildConfigFile, e.message)
             sys.exit(E_INVALID_GIT_REPO)
 
-        # load daemon settings
-        self.loadDaemonSettings()
+    def _checkDockerImage(self):
+        """Checks if the Docker Image is missing
+        """
 
-        # load irc bot config
-        self.loadIRCBotConfig()
-
-        # prepare data object
-        self._prepareDataObject()
-
-        # start IRC bot
-        if self._useirc:
-            self._start_ircbot()
-
-        # start api server
-        self._api_server_start()
-
-        # start daemon
-        self.start()
+        try:
+            self.checkRequirements()
+        except DockerImageMissingException as e:
+            log.error(e.message)
+            sys.exit(E_DOCKER_IMAGE_MISSING)
 
     def _start_ircbot(self):
-        thread = threading.Thread(target=self._thread_ircbot)
-        thread.start()
+        if self._useirc:
+            thread = threading.Thread(target=self._thread_ircbot)
+            thread.start()
 
     def _thread_ircbot(self):
         # initialize bot
@@ -145,7 +162,8 @@ class Daemon(Action):
                 else:
                     # accessing thread-safe daemon information
                     self._daemon_info_lock.acquire()
-                    daemon_info = self._daemon_info.copy()
+                    running_builds = self._daemon_info["running_builds"].copy()
+                    scheduled_builds = self._daemon_info["scheduled_builds"].copy()
                     self._daemon_info_lock.release()
 
                     # receive daemon status
@@ -154,7 +172,8 @@ class Daemon(Action):
                         yield from websocket.send(json.dumps(
                             {
                                 "id": data["id"],
-                                "running_builds": daemon_info["running_builds"]
+                                "running_builds": running_builds,
+                                "scheduled_builds": scheduled_builds
                             }
                         ))
                     else:
@@ -201,9 +220,6 @@ class Daemon(Action):
         else:
             self._print("The daemon is now running in the debug mode.")
 
-        # prepare queue
-        self._jobs = Queue()
-
         # start thread which is required to handle incoming jobs
         thread = threading.Thread(target=self._jobManager)
         thread.start()
@@ -217,21 +233,23 @@ class Daemon(Action):
 
     def _jobManager(self):
         while True:
-            # get all running builds
+            # get a list of all available jobs
             self._daemon_info_lock.acquire()
             running_builds = self._daemon_info["running_builds"]
+            jobs = copy.deepcopy(self._daemon_info["jobs"])
             self._daemon_info_lock.release()
 
             # search for new jobs in queue
-            if not self._jobs.empty():
-                while not self._jobs.empty():
-                    if running_builds < self._max_containers:
-                        data = self._jobs.get()
+            if running_builds < self._max_containers:
+                for idx, job in enumerate(jobs):
+                    if running_builds >= self._max_containers:
+                        break
 
+                    if job["status"] == 0:
                         # create thread
                         thread = threading.Thread(
                             target=self._process,
-                            args=(copy.deepcopy(data["project"]), data["dc_file"][:])
+                            args=(copy.deepcopy(job["project"]), job["dc_file"][:])
                         )
 
                         # start thread
@@ -239,7 +257,13 @@ class Daemon(Action):
                         
                         # update amount of running builds
                         self._daemon_info_lock.acquire()
+
+                        running_builds += 1
+
+                        self._daemon_info["jobs"][idx]["status"] = 1
                         self._daemon_info["running_builds"] += 1
+                        self._daemon_info["scheduled_builds"] -= 1
+
                         self._daemon_info_lock.release()
                     else:
                         break
@@ -273,13 +297,19 @@ class Daemon(Action):
                 # update to the new commit hash
                 self.projects[i]["vcs_lastrev"] = commit[:]
 
-                # start and prepare a container in a new thread
+                # add new job for each DC-file
                 for dc_file in self.projects[i]["dc_files"]:
-                    self._jobs.put({
+                    self._daemon_info_lock.acquire()
+                    self._daemon_info["jobs"].append({
                         "project": copy.deepcopy(self.projects[i]),
                         "dc_file": dc_file[:],
-                        "commit": commit
+                        "commit": commit[:],
+                        "status": 0,
+                        "container_id": ""
                     })
+
+                    self._daemon_info["scheduled_builds"] += 1
+                    self._daemon_info_lock.release()
 
     def _process(self, project_info, dc_file):
         """Thread function to start containers and build documentations
@@ -291,6 +321,18 @@ class Daemon(Action):
         # create container
         container = Container()
         container.spawn()
+
+        # save container id in daemon info
+        self._daemon_info_lock.acquire()
+
+        for idx, job in enumerate(self._daemon_info["jobs"]):
+            if job["dc_file"] == dc_file and job["status"] == 1:
+                job["container_id"] = container.getContainerID()
+                break
+
+        self._daemon_info_lock.release()
+
+        # prepare container
         container.prepare(project_info["vcs_repodir"])
 
         # specify build formats
@@ -337,14 +379,19 @@ class Daemon(Action):
                 self._irclock.acquire()
 
                 if self._ircbot and self._irc_config["irc_inform_build_success"]:
-                    self._ircbot.sendChannelMessage("A new build has been finished on {}! " \
-                        "DC-File: {}, Format: {}, Output-Archive: {}".format(
+                    message = "A new build has been finished on {}! DC-File: {}, Format: {}," \
+                        " Output-Archive: {}".format(
                             self._hostname,
                             result["dc_file"],
                             result["format"],
                             file_name
                         )
-                    )
+
+                    for client in project_info["notifications"]["irc"]:
+                        self._ircbot.sendClientMessage(client, message)
+
+                    if self._irc_config["irc_channel_messages"]:
+                        self._ircbot.sendChannelMessage(message)
 
                 self._irclock.release()
             else:
@@ -361,20 +408,31 @@ class Daemon(Action):
                 self._irclock.acquire()
 
                 if self._ircbot and self._irc_config["irc_inform_build_fail"]:
-                    self._ircbot.sendChannelMessage("A build has failed on {}! " \
-                        "DC-File: {}, Format: {}, Error-Log: {}".format(
+                    message = "A build has failed on {}! DC-File: {}, Format: {}, " \
+                        "Error-Log: {}".format(
                             self._hostname,
                             result["dc_file"],
                             result["format"],
                             error_log_path
                         )
-                    )
+
+                    for client in project_info["notifications"]["irc"]:
+                        self._ircbot.sendClientMessage(client, message)
+
+                    if self._irc_config["irc_channel_messages"]:
+                        self._ircbot.sendChannelMessage(message)
 
                 self._irclock.release()
 
         # update amount of running builds
         self._daemon_info_lock.acquire()
+
         self._daemon_info["running_builds"] -= 1
+        for idx, job in enumerate(self._daemon_info["jobs"]):
+            if job["dc_file"] == dc_file and job["status"] == 1:
+                self._daemon_info["jobs"].pop(idx)
+                break
+
         self._daemon_info_lock.release()
 
         # kill and delete container from the registry
@@ -448,15 +506,6 @@ class Daemon(Action):
         if not is_image_imported(CONTAINER_IMAGE):
             raise DockerImageMissingException(CONTAINER_IMAGE)
 
-    def _prepareDataObject(self):
-        """This prepares the data object what contains information about running builds
-        and some other statistics
-        """
-
-        self._daemon_info = {
-            "running_builds": 0
-        }
-
     def getStatus(self):
         self._daemon_info_lock.acquire()
         daemon_info = self._daemon_info.copy()
@@ -474,3 +523,5 @@ class Daemon(Action):
             configmanager.get_prop("irc_inform_build_success") == "true" else False
         self._irc_config["irc_inform_build_fail"] = True if \
             configmanager.get_prop("irc_inform_build_fail") == "true" else False
+        self._irc_config["irc_channel_messages"] = True if \
+            configmanager.get_prop("irc_channel_messages") == "true" else False

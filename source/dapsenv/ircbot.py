@@ -70,20 +70,58 @@ class IRCBot(irc.bot.SingleServerIRCBot):
         """
 
         # get sent text
-        text = e.arguments[0]
+        cmd = " ".join(e.arguments[0].split()[:1])
+        args = e.arguments[0].split()[1:]
 
         # parse commands
-        if text == "status":
+        if cmd == "status":
             if not self._daemon:
                 c.privmsg(e.source.nick, "Sorry, Daemon object is not yet initialized!")
                 return
 
             status = self._daemon.getStatus()
-            c.privmsg(e.source.nick, "Running Builds: {}".format(status["running_builds"]))
-        elif text == "ping":
+            c.privmsg(e.source.nick, "Running Builds: {}, Scheduled Builds: {}".format(
+                    status["running_builds"],
+                    status["scheduled_builds"]
+                )
+            )
+
+            active_builds = []
+            for builds in status["jobs"]:
+                active_builds.append(builds["dc_file"])
+
+            if active_builds:
+                c.privmsg(e.source.nick, "Active Builds: {}".format(", ".join(active_builds)))
+        elif cmd == "buildinfo":
+            if not args:
+                c.privmsg(e.source.nick, "Syntax: buildinfo [DC-File]")
+            else:
+                status = self._daemon.getStatus()
+                dc_file = args[0]
+
+                for job in status["jobs"]:
+                    if job["dc_file"] == dc_file:
+                        started_info = "No"
+                        container_id = "Unknown"
+
+                        if job["status"]:
+                            started_info = "Yes"
+
+                            if job["container_id"]:
+                                container_id = job["container_id"]
+
+                        c.privmsg(e.source.nick, "Build started? {}, Container-ID: {}".format(
+                            started_info,
+                            container_id
+                        ))
+
+                        return
+
+                c.privmsg(e.source.nick, "There is currently no build running with that DC-File.")
+        elif cmd == "ping":
             c.privmsg(e.source.nick, "pong!")
         else:
-            c.privmsg(e.source.nick, "Bad command! Available commands: status, ping")
+            c.privmsg(e.source.nick, "Bad command! Available commands: status, ping, buildinfo")
 
     def sendChannelMessage(self, message):
         """Sends a message to the channel which the bot joined
@@ -92,6 +130,15 @@ class IRCBot(irc.bot.SingleServerIRCBot):
         """
 
         self.connection.privmsg(self._channel, message)
+
+    def sendClientMessage(self, client, message):
+        """Sends a message to a client
+
+        :param string client: The name of the client
+        :param string message: The message to be sent
+        """
+
+        self.connection.privmsg(client, message)
 
     def setDaemon(self, obj):
         """Sets the daemon object for the communication between the daemon and the bot

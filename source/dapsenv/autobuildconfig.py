@@ -74,6 +74,20 @@ class AutoBuildConfig:
             data[index]["meta"] = project.attrib["meta"]
             data[index]["remarks"] = project.attrib["remarks"]
             data[index]["draft"] = project.attrib["draft"]
+            data[index]["notifications"] = {}
+            data[index]["notifications"]["emails"] = []
+            data[index]["notifications"]["irc"] = []
+
+            notification_elem = project.find("notifications")
+
+            if notification_elem is not None:
+                email_elem = notification_elem.find("emails")
+                if email_elem is not None:
+                    data[index]["notifications"]["emails"] = email_elem.text.split()
+
+                irc_elem = notification_elem.find("irc")
+                if irc_elem is not None:
+                    data[index]["notifications"]["irc"] = irc_elem.text.split()
 
         return data
 
