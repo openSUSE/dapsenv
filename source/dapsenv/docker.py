@@ -113,6 +113,7 @@ class Container:
         self.put("{}/data/guidename.xsl".format(SOURCE_DIR), "/tmp")
         self.put("{}/data/productname.xsl".format(SOURCE_DIR), "/tmp")
         self.put("{}/data/productnumber.xsl".format(SOURCE_DIR), "/tmp")
+        self.put("{}/data/rootid.xsl".format(SOURCE_DIR), "/tmp")
 
         # a timing issue appears sometimes - that's why we need to make sure that the
         # file is really copied over before we go ahead

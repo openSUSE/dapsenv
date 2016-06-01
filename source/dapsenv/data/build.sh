@@ -41,9 +41,11 @@ if [ $? -eq 0 ]; then
 
   # determine some product information and put it into /tmp/doc_info.json as JSON string
   # this will be used for DAPSEnv
-  PRODUCT=$(xsltproc /tmp/productname.xsl $3/build/.profiled/*/$MAIN)
-  PRODUCT_NUMBER=$(xsltproc /tmp/productnumber.xsl $3/build/.profiled/*/$MAIN)
-  GUIDE=$(xsltproc /tmp/guidename.xsl $3/build/.profiled/*/$MAIN)
+  XSLTPROCPARAM="--xinclude --stringparam rootid $ROOTID"
+
+  PRODUCT=$(xsltproc $XSLTPROCPARAM /tmp/productname.xsl $3/build/.profiled/*/$MAIN)
+  PRODUCT_NUMBER=$(xsltproc $XSLTPROCPARAM /tmp/productnumber.xsl $3/build/.profiled/*/$MAIN)
+  GUIDE=$(xsltproc $XSLTPROCPARAM /tmp/guidename.xsl $3/build/.profiled/*/$MAIN)
   echo "{ \"product\": \"$PRODUCT\", \"productnumber\": \"$PRODUCT_NUMBER\", \"guide\": \"$GUIDE\", \"dapscmd\": \"$DAPS_CMD\" }" > /tmp/doc_info.json
 
   echo "success" > $STATUS_FILE
