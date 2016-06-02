@@ -115,3 +115,8 @@ class ArgParser:
             "--debug", "-d", action="store_true", help="Useful for developer to get more " \
             "information about the Daemon process."
         )
+
+        cmd.add_argument(
+            "--autobuild-config", "-a", action="store", help="Specifies a path to the " \
+            "autobuild config file. This overrides the value in configuration files."
+        )

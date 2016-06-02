@@ -94,7 +94,11 @@ class Daemon(Action):
         self.loadIRCBotConfig()
 
         # load auto build configuration file
-        self._autoBuildConfigFile = configmanager.get_prop("daps_autobuild_config")
+        if self._args["autobuild_config"]:
+            self._autoBuildConfigFile = self._args["autobuild_config"]
+        else:
+            self._autoBuildConfigFile = configmanager.get_prop("daps_autobuild_config")
+
         self.autoBuildConfig = self.loadAutoBuildConfig(
             self._autoBuildConfigFile
         )
