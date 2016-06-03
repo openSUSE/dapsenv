@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refsect2 PUBLIC
+"-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.docbook.org/xml/4.5/docbookx.dtd"
+[
+<!ENTITY % entities SYSTEM "entity-decl.ent">
+%entities;
+]>
+
+  <refsect2>
+   <title><command>daemon</command> [-h] [--use-irc] [--no-output] [--debug]
+                      [--autobuild-config AUTOBUILD_CONFIG]</title>
+   <para>
+    Command to manage the daemon. The daemon starts automatically when the command
+    is called. It can be optimized by using some of the options below. The daemon
+    checks all configured Git repositories for new updates and triggers a rebuild
+    of a documentation then.
+   </para>
+   <variablelist>
+    <varlistentry>
+     <term><option>--use-irc</option></term>
+     <listitem>
+      <para>
+       Connects to the IRC server what is configured in the configuration file.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--no-output</option></term>
+     <listitem>
+      <para>
+       Hides the daemon output.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--debug</option></term>
+     <listitem>
+      <para>
+       Useful for developer to get more information about the Daemon process.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--autobuild-config</option> <replaceable>PATH</replaceable></term>
+     <listitem>
+      <para>
+       Specifies a path to the autobuild config file. This overrides the value in configuration files.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </refsect2>

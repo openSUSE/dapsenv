@@ -61,5 +61,6 @@
  <refsect1 id="dapsenv.commands">
   <title>Commands</title>
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="dapsenv.commands.config.xml"/>
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="dapsenv.commands.daemon.xml"/>
  </refsect1>
 </refentry>
