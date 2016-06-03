@@ -1,3 +1,6 @@
+graft man
+prune man/build
+
 include source/dapsenv/templates/dapsenv.conf
 include source/dapsenv/data/build.sh
 include source/dapsenv/data/cleanup.sh
