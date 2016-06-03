@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE variablelist PUBLIC
+"-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.docbook.org/xml/4.5/docbookx.dtd"
+[
+<!ENTITY % entities SYSTEM "entity-decl.ent">
+%entities;
+]>
+
+  <variablelist>
+   <varlistentry>
+    <term><option>-h</option> or <option>--help</option></term>
+    <listitem>
+     <para>Show a help dialog. You can also use <option>-h</option> with subcommands to get help about a specific subcommand.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>-v</option></term>
+    <listitem>
+     <para>Be more verbose. Increase the verbosity level by putting more "v" behind -v (example: -vv or -vvv)</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>--version</option></term>
+    <listitem>
+     <para>Display the version of &progname;.</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>

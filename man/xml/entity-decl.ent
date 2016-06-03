@@ -1,0 +1,24 @@
+<!ENTITY progname "DapsEnv">
+<!ENTITY version "1.0.0">
+<!ENTITY progcmd "dapsenv">
+<!ENTITY release "06/03/2016">
+<!ENTITY filesentry "<varlistentry>
+     <term><option>FILES</option></term>
+     <listitem>
+      <para>
+       A list of all files which should be touched by running that command.
+      </para>
+     </listitem>
+    </varlistentry>">
+<!ENTITY optionalopt "This option is optional.">
+<!ENTITY stoponerrordesc "In case of errors in the XML files, this option exits the script without writing any changes. If not specified, files causing errors will
+       be reported and otherwise be ignored. &optionalopt;">
+<!ENTITY stoponerrorentry "<varlistentry>
+     <term><option>--stop-on-error</option></term>
+     <listitem>
+      <para>
+       &stoponerrordesc;
+      </para>
+     </listitem>
+    </varlistentry>">
+<!ENTITY propertydesc "Property is the name of an XML tag.">

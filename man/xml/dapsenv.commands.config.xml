@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refsect2 PUBLIC
+"-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.docbook.org/xml/4.5/docbookx.dtd"
+[
+<!ENTITY % entities SYSTEM "entity-decl.ent">
+%entities;
+]>
+
+  <refsect2>
+   <title><command>config</command> [-h] (--global | --user | --own | --generate) [--force]
+                      [--path PATH] [--property PROPERTY] [--value VALUE]</title>
+   <para>Configures &progname;.</para>
+   <variablelist>
+    <varlistentry>
+     <term><option>--global</option></term>
+     <listitem>
+      <para>
+       Specifies to use the global configuration which is stored in the configuration directory /etc.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--user</option></term>
+     <listitem>
+      <para>
+       Specifies to use the user configuration which is stored in the home directory of the current user.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--own</option></term>
+     <listitem>
+      <para>
+       Specifies to use an own specified configuration which needs to be specified by --path
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--generate</option></term>
+     <listitem>
+      <para>
+       Generates a configuration file. The path must be set via --path.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--force</option></term>
+     <listitem>
+      <para>
+        Force the creation of a config file (overrides existing ones).
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--path</option> <replaceable>PATH</replaceable></term>
+     <listitem>
+      <para>
+       Specifies a path to a configuration file.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--property</option> <replaceable>[PROPERTY]</replaceable></term>
+     <listitem>
+      <para>
+       Specifies a property from the config file. If no value is set with --value, only the
+       current value of the property will be print on the command line.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--value</option> <replaceable>VALUE</replaceable></term>
+     <listitem>
+      <para>
+       Sets a new value for a property.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </refsect2>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC
+"-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.docbook.org/xml/4.5/docbookx.dtd"
+[
+<!ENTITY % entities SYSTEM "entity-decl.ent">
+%entities;
+]>
+<refentry lang="en" id="dapsenv">
+ <refentryinfo>
+  <authorgroup>
+   <author>
+    <contrib>Developer</contrib>
+    <firstname>Manuel</firstname>
+    <surname>Schnitzer</surname>
+    <email>webmaster@mschnitzer.de</email>
+   </author>
+   <author>
+    <contrib>Contributor</contrib>
+    <firstname>Thomas</firstname>
+    <surname>Schraitle</surname>
+    <email>toms@opensuse.org</email>
+   </author>
+  </authorgroup>
+ </refentryinfo>
+ <refmeta>
+  <refentrytitle>&progname;</refentrytitle>
+  <manvolnum>1</manvolnum>
+  <refmiscinfo class="date">&release;</refmiscinfo>
+  <refmiscinfo class="version">&version;</refmiscinfo>
+  <refmiscinfo class="manual">&progname;</refmiscinfo>
+ </refmeta>
+ <refnamediv>
+  <refname>&progcmd;</refname>
+  <refpurpose>
+   &progname; - A build environment to build documentations with DAPS.
+  </refpurpose>
+ </refnamediv>
+ <refsynopsisdiv id="dapsenv.synopsis">
+  <title>Synopsis</title>
+  <cmdsynopsis>
+   <command>&progcmd;</command>
+   <arg choice="opt">GLOBAL OPTIONS</arg>
+   <arg>SUBCOMMAND</arg>
+   <arg choice="opt">OPTIONS</arg>
+  </cmdsynopsis>
+ </refsynopsisdiv>
+ <refsect1 id="dapsenv.description">
+  <title>Description</title>
+  <para>
+   &progname; allows the user to build documentations with DAPS in a special environment. DAPS doesn't allow building
+   documentations in parallel. &progname; solves that problem by using Docker containers. Each DC-File gets an extra
+   Docker container. The build process happens only in those Docker containers. This makes the build process of documentations
+   cleaner and allows parallelization.
+  </para>
+ </refsect1>
+ <refsect1 id="dapsenv.optionaloptions">
+  <title>Global Options</title>
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="dapsenv.globaloptions.xml"/>
+ </refsect1>
+ <refsect1 id="dapsenv.commands">
+  <title>Commands</title>
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="dapsenv.commands.config.xml"/>
+ </refsect1>
+</refentry>
