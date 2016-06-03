@@ -10,3 +10,4 @@ More information can be found on the official [DAPS website](http://opensuse.git
 
 ### Developers
 * [Manuel Schnitzer](https://github.com/mschnitzer) (founder)
+* [Thomas Schraitle](https://github.com/tomschr) (contributor)
