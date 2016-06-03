@@ -18,6 +18,7 @@
 
 import dapsenv.git as Git
 import re
+import threading
 from collections import OrderedDict
 from dapsenv.exceptions import AutoBuildConfigSyntaxErrorException, AutoBuildConfigNotFound
 from lxml import etree
@@ -34,6 +35,7 @@ class AutoBuildConfig:
         self._dcfiles_pattern = re.compile("DC\-[a-zA-Z\-_]+")
 
         self._path = path
+        self._write_lock = threading.Lock()
         self.parse()
 
     def parse(self):
@@ -90,6 +92,22 @@ class AutoBuildConfig:
                     data[index]["notifications"]["irc"] = irc_elem.text.split()
 
         return data
+
+    def updateCommitHash(self, project, new_commit):
+        """Updates the commit hash for a project thread-safe
+
+        :param string project: the name of the project
+        :param string new_commit: The new commit hash
+        """
+
+        self._write_lock.acquire()
+
+        el = self._tree.find("set[@id='{}']/vcs/lastrev".format(project))
+        if el != -1:
+            el.text = new_commit
+            self._tree.write(self._path, encoding="utf-8", xml_declaration=True)
+
+        self._write_lock.release()
 
     def _parse_dc_files(self, dc_files):
         """Remove all trash characters from the 'dcfiles' element

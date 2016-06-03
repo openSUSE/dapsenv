@@ -86,6 +86,7 @@ class Daemon(Action):
         # create locks for thread-safe communications
         self._irclock = threading.Lock()
         self._daemon_info_lock = threading.Lock()
+        self._autobuild_config_access = threading.Lock()
 
         # load daemon settings
         self.loadDaemonSettings()
@@ -300,6 +301,7 @@ class Daemon(Action):
             if self.projects[i]["vcs_lastrev"] != commit:
                 # update to the new commit hash
                 self.projects[i]["vcs_lastrev"] = commit[:]
+                self.autoBuildConfig.updateCommitHash(self.projects[i]["project"], commit[:])
 
                 # add new job for each DC-file
                 for dc_file in self.projects[i]["dc_files"]:
