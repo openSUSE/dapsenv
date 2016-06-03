@@ -41,7 +41,11 @@ def get_prop(prop, config_type="", config_path=""):
     if len(config_type):
         paths = [get_config_path(config_type, config_path)]
     else:
-        paths = [get_global_config_path(), get_user_config_path()]
+        paths = [get_global_config_path()]
+
+        user_path = get_user_config_path()
+        if os.path.exists(user_path):
+            paths.append(user_path)
 
     return get_property_value(prop, paths)
 
