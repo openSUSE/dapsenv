@@ -1,6 +1,7 @@
 #
 # Requirement files for Python Virtual Environments
 #
--r requirements.txt
-pytest>=2.8
-mock
+asyncio
+websockets>=3.1
+lxml>=3.3.5
+docker-py
