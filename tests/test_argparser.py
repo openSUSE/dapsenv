@@ -5,35 +5,27 @@ from dapsenv.general import __version__
 
 # it exits with exit code 2 if an invalid action/sub-command was specified
 def test_parse_exception():
-    code = 0
-
-    try:
+    with pytest.raises(SystemExit) as error:
         argparser = ArgParser(["test", "abc", "123"])
         parsed_args = argparser.parse()
-    except SystemExit as e:
-        code = e.code
 
-    assert code == E_INVALID_CLI
+    assert error.value.code == E_INVALID_CLI
+
 
 # it succeeds if a valid command was parsed to the command line
 def test_parse_success():
-    code = 0
+    argparser = ArgParser(["config", "--global", "--property", "test"])
+    args = argparser.parse()
+    assert args['action'] == 'config'
+    assert args['global'] == True
+    assert args['property'] == 'test'
 
-    try:
-        argparser = ArgParser(["config", "--global", "--property", "test"])
-        parsed_args = argparser.parse()
-    except SystemExit as e:
-        code = e.code
-
-    assert code == 0
 
 # it returns the correct version number
 def test_return_version(capsys):
-    try:
+    with pytest.raises(SystemExit) as error:
         argparser = ArgParser(["--version"])
         parsed_args = argparser.parse()
-    except SystemExit:
-        pass
 
     out, err = capsys.readouterr()
 
