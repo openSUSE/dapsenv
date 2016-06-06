@@ -167,8 +167,8 @@ class Daemon(Action):
                 else:
                     # accessing thread-safe daemon information
                     self._daemon_info_lock.acquire()
-                    running_builds = self._daemon_info["running_builds"].copy()
-                    scheduled_builds = self._daemon_info["scheduled_builds"].copy()
+                    running_builds = copy.copy(self._daemon_info["running_builds"])
+                    scheduled_builds = copy.copy(self._daemon_info["scheduled_builds"])
                     self._daemon_info_lock.release()
 
                     # receive daemon status

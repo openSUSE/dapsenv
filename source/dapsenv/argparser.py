@@ -34,6 +34,7 @@ class ArgParser:
         self.addGlobalOptions()
         self.addConfigCommand()
         self.addDaemonCommand()
+        self.addStatusCommand()
 
     def print_help(self):
         self.parser.print_help()
@@ -119,4 +120,19 @@ class ArgParser:
         cmd.add_argument(
             "--autobuild-config", "-a", action="store", help="Specifies a path to the " \
             "autobuild config file. This overrides the value in configuration files."
+        )
+
+    def addStatusCommand(self):
+        cmd = self.cmdSubParser.add_parser(
+            "status", aliases=["s"], help="Queries a DapsEnv API server."
+        )
+
+        cmd.add_argument(
+            "--ip", "-i", action="store", default="127.0.0.1",
+            help="Sets the IP of the API server."
+        )
+
+        cmd.add_argument(
+            "--port", "-p", action="store", default=5555,
+            help="Sets the API server port."
         )
