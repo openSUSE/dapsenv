@@ -3,24 +3,17 @@ from dapsenv.__init__ import main, execute
 from dapsenv.exceptions import InvalidActionException
 from dapsenv.exitcodes import E_INVALID_CLI, E_NO_IMPLEMENTATION_FOUND
 
+
 # it fails when no sub-command/action was specified
 def test_main():
-    code = 0
-
-    try:
+    with pytest.raises(SystemExit) as error:
         main([""])
-    except SystemExit as e:
-        code = e.code
+    assert error.value.code == E_INVALID_CLI
 
-    assert code == E_INVALID_CLI
 
 # it fails if an action is not implemented
 def test_action_not_implemented():
-    code = 0
-
-    try:
+    with pytest.raises(SystemExit) as error:
         execute({ "action": "test123" })
-    except SystemExit as e:
-        code = e.code
 
-    assert code == E_NO_IMPLEMENTATION_FOUND
+    assert error.value.code == E_NO_IMPLEMENTATION_FOUND

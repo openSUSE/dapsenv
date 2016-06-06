@@ -89,6 +89,12 @@ setupdict = dict(
     # https://pythonhosted.org/setuptools/setuptools.html#including-data-files
     include_package_data = True,
 
+    install_requires=[
+        'asyncio', 'websockets>=3.1'
+        'docker-py', 'lxml>= 3.3.5',
+        'irc',
+    ],
+
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     packages=find_packages('source'),
