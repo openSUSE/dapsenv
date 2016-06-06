@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refsect2 PUBLIC
+"-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.docbook.org/xml/4.5/docbookx.dtd"
+[
+<!ENTITY % entities SYSTEM "entity-decl.ent">
+%entities;
+]>
+
+  <refsect2>
+   <title><command>status</command> [-h] [--ip IP] [--port PORT]</title>
+   <para>
+    The <command>status</command> offers the ability to communicate with an API server
+    what is created by the Daemon.
+   </para>
+   <variablelist>
+    <varlistentry>
+     <term><option>--ip</option></term>
+     <listitem>
+      <para>
+       The IP address of the Daemon API server. Default: 127.0.0.1
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--port</option></term>
+     <listitem>
+      <para>
+       The port of the Daemon API server. Default: 5555
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </refsect2>
