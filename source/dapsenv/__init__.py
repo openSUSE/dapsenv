@@ -62,10 +62,19 @@ def create_dirs():
         os.makedirs(BUILDS_DIR)
 
 def execute(args):
-    action = args["action"]
-
     # for the passed action/sub-command it's required to find the appropriate "Action Class". Each
     # sub-command has its own action class
+    command = {
+        "config": "config",
+        "c": "config",
+        "daemon": "daemon",
+        "d": "daemon",
+        "status": "status",
+        "s": "status"
+    }
+
+    action = command[args["action"]]
+
     try:
         class_name = action.title()
         module = import_module("dapsenv.actions.{}".format(action))
