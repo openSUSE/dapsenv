@@ -86,7 +86,6 @@ class Daemon(Action):
         # create locks for thread-safe communications
         self._irclock = threading.Lock()
         self._daemon_info_lock = threading.Lock()
-        self._autobuild_config_access = threading.Lock()
 
         # load daemon settings
         self.loadDaemonSettings()
@@ -182,6 +181,41 @@ class Daemon(Action):
                                 "jobs": self.getJobList()
                             }
                         ))
+                    # trigger build request
+                    elif data["id"] == 2:
+                        # check for correct data packages
+                        if not "dc_files" in data or type(data["dc_files"]) != type(list()):
+                            yield from websocket.close()
+                            return
+
+                        valid_dcs = []
+
+                        # find project for dc file
+                        for dc_file in data["dc_files"]:
+                            for idx in self.projects:
+                                project = self.projects[idx]
+                                if dc_file in project["dc_files"]:
+                                    self._daemon_info_lock.acquire()
+                                    self._daemon_info["jobs"].append({
+                                        "project": copy.deepcopy(self.projects[idx]),
+                                        "dc_file": dc_file[:],
+                                        "commit": project["vcs_lastrev"],
+                                        "status": 0,
+                                        "container_id": "",
+                                        "time_started": 0
+                                    })
+
+                                    self._daemon_info["scheduled_builds"] += 1
+                                    self._daemon_info_lock.release()
+
+                                    valid_dcs.append(dc_file)
+                                    break
+
+                        # send answer
+                        yield from websocket.send(json.dumps({
+                            "id": 2,
+                            "triggered_build": valid_dcs
+                        }))
                     else:
                         # close if an invalid packet was received
                         yield from websocket.close()
@@ -313,7 +347,8 @@ class Daemon(Action):
                         "dc_file": dc_file[:],
                         "commit": commit[:],
                         "status": 0,
-                        "container_id": ""
+                        "container_id": "",
+                        "time_started": 0
                     })
 
                     self._daemon_info["scheduled_builds"] += 1

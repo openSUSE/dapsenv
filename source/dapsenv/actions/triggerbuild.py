@@ -24,11 +24,12 @@ from dapsenv.actions.action import Action
 from dapsenv.exitcodes import E_API_SERVER_CONN_FAILED, E_API_SERVER_CLOSED_CONNECTION, \
                               E_API_SERVER_INVALID_DATA_SENT
 from dapsenv.logmanager import log
+from dapsenv.shellcolors import red
 from datetime import datetime
 from prettytable import PrettyTable
 from socket import gaierror
 
-class Status(Action):
+class Triggerbuild(Action):
     def __init__(self):
         pass
 
@@ -39,6 +40,7 @@ class Status(Action):
         self._args = args
         self._ip = self._args["ip"]
         self._port = self._args["port"]
+        self._dc_files = self._args["dc_files"]
         self._error = 0
 
         asyncio.get_event_loop().run_until_complete(self.start_client())
@@ -52,40 +54,21 @@ class Status(Action):
             ws = yield from websockets.connect("ws://{}:{}/".format(self._ip, self._port))
 
             # request status information packet
-            yield from ws.send(json.dumps({ "id": 1 }))
+            yield from ws.send(json.dumps({ "id": 2, "dc_files": self._dc_files }))
 
             # fetch server message
             res = yield from ws.recv()
             try:
                 res = json.loads(res)
 
-                print("Received status information from API server: {}:{}\n".format(
-                    self._ip, self._port
-                ))
+                for dc_file in self._dc_files:
+                    if dc_file in res["triggered_build"]:
+                        print("Build request scheduled for DC-File '{}'.".format(dc_file))
 
-                print("Running Builds:\t\t{}".format(res["running_builds"]))
-                print("Scheduled Builds:\t{}".format(res["scheduled_builds"]))
+                for dc_file in self._dc_files:
+                    if not dc_file in res["triggered_build"]:
+                        sys.stderr.write(red("Error: Could not find DC-File '{}' in any projects.\n".format(dc_file)))
 
-                if res["running_builds"]:
-                    print("\nCurrent Running Jobs:")
-
-                    table = PrettyTable(["Project", "DC-File", "Branch", "Commit", "Started"])
-
-                    for job in res["jobs"]:
-                        # append only running builds
-                        if job["status"]:
-                            table.add_row([
-                                job["project"],
-                                job["dc_file"],
-                                job["branch"],
-                                job["commit"][:24],
-                                datetime.fromtimestamp(job["time_started"]).strftime(
-                                    "%m/%d/%Y %H:%M:%S"
-                                )
-                            ])
-
-                    print(table)
-                    print()
             except ValueError:
                 log.error("Invalid data received from API server.")
                 self._error = E_API_SERVER_INVALID_DATA_SENT

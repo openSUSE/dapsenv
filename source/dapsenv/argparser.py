@@ -35,6 +35,7 @@ class ArgParser:
         self.addConfigCommand()
         self.addDaemonCommand()
         self.addStatusCommand()
+        self.addTriggerBuildCommand()
 
     def print_help(self):
         self.parser.print_help()
@@ -134,5 +135,25 @@ class ArgParser:
 
         cmd.add_argument(
             "--port", "-p", action="store", default=5555,
-            help="Sets the API server port."
+            help="Sets the port of the API server."
+        )
+
+    def addTriggerBuildCommand(self):
+        cmd = self.cmdSubParser.add_parser(
+            "trigger-build", aliases=["tb"], help="Triggers a build on a DapsEnv instance."
+        )
+
+        cmd.add_argument(
+            "--ip", "-i", action="store", default="127.0.0.1",
+            help="Sets the IP of the API server."
+        )
+
+        cmd.add_argument(
+            "--port", "-p", action="store", default=5555,
+            help="Sets the port of the API server."
+        )
+
+        cmd.add_argument(
+            "dc_files", nargs="+", metavar="FILE",
+            help="One or more DC-Files"
         )

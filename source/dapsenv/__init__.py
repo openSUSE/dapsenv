@@ -70,7 +70,9 @@ def execute(args):
         "daemon": "daemon",
         "d": "daemon",
         "status": "status",
-        "s": "status"
+        "s": "status",
+        "trigger-build": "triggerbuild",
+        "tb": "triggerbuild"
     }
 
     action = command[args["action"]]
