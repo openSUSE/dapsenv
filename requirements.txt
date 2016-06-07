@@ -5,3 +5,4 @@ asyncio
 websockets>=3.1
 lxml>=3.3.5
 docker-py
+prettytable>=0.7.2

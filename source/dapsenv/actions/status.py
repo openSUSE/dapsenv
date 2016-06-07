@@ -24,6 +24,8 @@ from dapsenv.actions.action import Action
 from dapsenv.exitcodes import E_API_SERVER_CONN_FAILED, E_API_SERVER_CLOSED_CONNECTION, \
                               E_API_SERVER_INVALID_DATA_SENT
 from dapsenv.logmanager import log
+from datetime import datetime
+from prettytable import PrettyTable
 from socket import gaierror
 
 class Status(Action):
@@ -48,8 +50,11 @@ class Status(Action):
     def start_client(self):
         try:
             ws = yield from websockets.connect("ws://{}:{}/".format(self._ip, self._port))
+
+            # request status information packet
             yield from ws.send(json.dumps({ "id": 1 }))
 
+            # fetch server message
             res = yield from ws.recv()
             try:
                 res = json.loads(res)
@@ -60,6 +65,27 @@ class Status(Action):
 
                 print("Running Builds:\t\t{}".format(res["running_builds"]))
                 print("Scheduled Builds:\t{}".format(res["scheduled_builds"]))
+
+                if res["running_builds"]:
+                    print("\nCurrent Running Jobs:")
+
+                    table = PrettyTable(["Project", "DC-File", "Branch", "Commit", "Started"])
+
+                    for job in res["jobs"]:
+                        # append only running builds
+                        if job["status"]:
+                            table.add_row([
+                                job["project"],
+                                job["dc_file"],
+                                job["branch"],
+                                job["commit"][:24],
+                                datetime.fromtimestamp(job["time_started"]).strftime(
+                                    "%m/%d/%Y %H:%M:%S"
+                                )
+                            ])
+
+                    print(table)
+                    print()
             except ValueError:
                 log.error("Invalid data sent from API server.")
                 self._error = E_API_SERVER_INVALID_DATA_SENT

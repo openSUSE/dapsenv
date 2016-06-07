@@ -178,7 +178,8 @@ class Daemon(Action):
                             {
                                 "id": data["id"],
                                 "running_builds": running_builds,
-                                "scheduled_builds": scheduled_builds
+                                "scheduled_builds": scheduled_builds,
+                                "jobs": self.getJobList()
                             }
                         ))
                     else:
@@ -240,7 +241,7 @@ class Daemon(Action):
         while True:
             # get a list of all available jobs
             self._daemon_info_lock.acquire()
-            running_builds = self._daemon_info["running_builds"]
+            running_builds = copy.copy(self._daemon_info["running_builds"])
             jobs = copy.deepcopy(self._daemon_info["jobs"])
             self._daemon_info_lock.release()
 
@@ -266,6 +267,7 @@ class Daemon(Action):
                         running_builds += 1
 
                         self._daemon_info["jobs"][idx]["status"] = 1
+                        self._daemon_info["jobs"][idx]["time_started"] = int(time.time())
                         self._daemon_info["running_builds"] += 1
                         self._daemon_info["scheduled_builds"] -= 1
 
@@ -451,6 +453,24 @@ class Daemon(Action):
 
         if not self._noout:
             print(message)
+
+    def getJobList(self):
+        result = []
+
+        self._daemon_info_lock.acquire()
+        for job in self._daemon_info["jobs"]:
+            result.append({
+                "project": job["project"]["project"],
+                "branch": job["project"]["vcs_branch"],
+                "dc_file": job["dc_file"],
+                "status": job["status"],
+                "commit": job["commit"],
+                "time_started": job["time_started"],
+                "status": job["status"]
+            })
+        self._daemon_info_lock.release()
+
+        return result
 
     def loadAutoBuildConfig(self, path):
         """Loads the auto build config file into memory and parses it
