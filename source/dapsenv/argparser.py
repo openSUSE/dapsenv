@@ -17,6 +17,7 @@
 # you may find current contact information at www.suse.com
 
 import argparse
+import dapsenv.configmanager as configmanager
 from dapsenv.general import __version__
 
 class ArgParser:
@@ -124,32 +125,52 @@ class ArgParser:
         )
 
     def addStatusCommand(self):
+        default_ip = configmanager.get_prop("api_client_default_ip")
+        if not default_ip:
+            default_ip = "127.0.0.1"
+
+        default_port = 5555
+        try:
+            default_port = int(configmanager.get_prop("api_client_default_port"))
+        except ValueError:
+            pass
+
         cmd = self.cmdSubParser.add_parser(
             "status", aliases=["s"], help="Queries a DapsEnv API server."
         )
 
         cmd.add_argument(
-            "--ip", "-i", action="store", default="127.0.0.1",
+            "--ip", "-i", action="store", default=default_ip,
             help="Sets the IP of the API server."
         )
 
         cmd.add_argument(
-            "--port", "-p", action="store", default=5555,
+            "--port", "-p", action="store", default=default_port,
             help="Sets the port of the API server."
         )
 
     def addTriggerBuildCommand(self):
+        default_ip = configmanager.get_prop("api_client_default_ip")
+        if not default_ip:
+            default_ip = "127.0.0.1"
+
+        default_port = 5555
+        try:
+            default_port = int(configmanager.get_prop("api_client_default_port"))
+        except ValueError:
+            pass
+
         cmd = self.cmdSubParser.add_parser(
             "trigger-build", aliases=["tb"], help="Triggers a build on a DapsEnv instance."
         )
 
         cmd.add_argument(
-            "--ip", "-i", action="store", default="127.0.0.1",
+            "--ip", "-i", action="store", default=default_ip,
             help="Sets the IP of the API server."
         )
 
         cmd.add_argument(
-            "--port", "-p", action="store", default=5555,
+            "--port", "-p", action="store", default=default_port,
             help="Sets the port of the API server."
         )
 
