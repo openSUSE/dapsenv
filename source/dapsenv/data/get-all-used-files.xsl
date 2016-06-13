@@ -85,7 +85,7 @@
   exclude-result-prefixes="exsl xi db">
 
   <xsl:import href="check.profiling.xsl"/>
-  <xsl:output method="xml" indent="yes"/>
+  <xsl:output method="xml" indent="yes" omit-xml-declaration="yes"/>
 
   <xsl:key name="file-id" match="file" use="@id|@xml:id"/>
 
@@ -147,7 +147,7 @@
   
   <!-- This stylesheet gets only called once -->
   <xsl:template match="/*" mode="root">
-    <div href="{concat($xml.src.path, $mainfile)}" remap="{local-name()}" text="false">
+    <div href="{concat($xml.src.path, $mainfile)}" remap="{local-name()}" text="false" id="{(@id|@xml:id)[1]}">
         <xsl:copy-of select="@*"/>
         <xsl:apply-templates/>
     </div>
