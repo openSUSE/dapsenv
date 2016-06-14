@@ -18,7 +18,8 @@
 
 import shlex
 import subprocess
-from dapsenv.exceptions import GitInvalidRepoException, GitInvalidBranchName
+from dapsenv.exceptions import GitInvalidRepoException, GitInvalidBranchName, \
+                               GitErrorException
 from dapsenv.logmanager import log
 
 class Repository:
@@ -104,6 +105,34 @@ class Repository:
             raise GitInvalidBranchName(self.getRepoPath(), branch)
 
         return process.stdout.read().decode("utf-8")
+
+    def getChangedFilesBetweenCommits(self, commit_1, commit_2):
+        """Returns a list of changed files between two commits
+
+        :param string commit_1: Oldest Commit
+        :param string commit_2: Newest Commit
+        :return list: Changed files
+        """
+
+        cmd = "git --no-pager -C {} diff --name-only {} {}".format(
+            self._repopath,
+            commit_1,
+            commit_2
+        )
+
+        process = subprocess.Popen(
+            shlex.split(cmd),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+
+        stdout = process.stdout.read().decode("utf-8")
+        stderr = process.stderr.read().decode("utf-8")
+
+        if stderr:
+            raise GitErrorException(cmd, stderr)
+
+        return list(filter(None, stdout.split("\n")))
 
     def getRepoPath(self):
         """Gets the full path to the repository which was specified in __init__

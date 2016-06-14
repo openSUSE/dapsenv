@@ -287,9 +287,6 @@ class Container:
         data["compile_time"] = int(time.time()) - start
         data["archive_name"] = "/tmp/documentation_{}.tar".format(build_format)
 
-        # execute cleanup script
-        self.cleanup()
-
         return data
 
     def cleanup(self):

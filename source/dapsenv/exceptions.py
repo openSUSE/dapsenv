@@ -130,6 +130,14 @@ class GitInvalidBranchName(DapsEnvException):
     def __str__(self):
         log.error(self.message)
 
+class GitErrorException(DapsEnvException):
+    def __init__(self, command, stderr):
+        self.command = command
+        self.stderr = stderr
+
+    def __str__(self):
+        log.error("Could not execute '%s': %s", self.command, self.stderr)
+
 class ContainerFileCreationFailed(DapsEnvException):
     def __init__(self, file_name):
         self.file_name = file_name
@@ -152,6 +160,31 @@ class DockerImageMissingException(DapsEnvException):
         self.image = image
         self.message = "Docker Image '{}' must be imported first! Run 'docker pull {}' " \
             "to import it.".format(image, image)
+
+    def __str__(self):
+        return self.message
+
+class DCFileMAINNotFoundException(DapsEnvException):
+    def __init__(self, dcfile):
+        self.dcfile = dcfile
+        self.message = "MAIN Variable not found in DC-File '{}'.".format(dcfile)
+
+    def __str__(self):
+        return self.message
+
+class XSLTProcException(DapsEnvException):
+    def __init__(self, command, stderr):
+        self.command = command
+        self.stderr = stderr
+        self.message = "command '{}' has failed. stderr: {}".format(command, stderr)
+
+    def __str__(self):
+        return self.message
+
+class InvalidRootIDException(DapsEnvException):
+    def __init__(self, rootid):
+        self.rootid = rootid
+        self.message = "Unknown root id '{}'.".format(rootid)
 
     def __str__(self):
         return self.message
