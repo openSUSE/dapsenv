@@ -175,6 +175,11 @@ class ArgParser:
         )
 
         cmd.add_argument(
-            "dc_files", nargs="+", metavar="FILE",
-            help="One or more DC-Files"
+            "--projects", "-r", nargs="+", action="store",
+            help="Schedules builds for the given projects."
+        )
+
+        cmd.add_argument(
+            "--dcfiles", "-d", nargs="+", action="store",
+            help="Schedules builds for the given DC-Files."
         )

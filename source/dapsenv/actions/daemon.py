@@ -186,14 +186,20 @@ class Daemon(Action):
                     # trigger build request
                     elif data["id"] == 2:
                         # check for correct data packages
-                        if not "dc_files" in data or type(data["dc_files"]) != type(list()):
+                        if not "dc_files" in data or not "projects" in data:
                             yield from websocket.close()
                             return
 
+                        if type(data["dc_files"]) != type(list()) or \
+                            type(data["projects"]) != type(list()):
+                            
+                            yield from websocket.close()
+                            return
+
+                        # find projects for dc files and trigger builds
                         valid_dcs = []
 
-                        # find project for dc file
-                        for dc_file in data["dc_files"]:
+                        for dc_file in set(data["dc_files"]):
                             for idx in self.projects:
                                 project = self.projects[idx]
                                 if dc_file in project["dc_files"]:
@@ -213,10 +219,35 @@ class Daemon(Action):
                                     valid_dcs.append(dc_file)
                                     break
 
+                        # find projects and trigger builds
+                        valid_projects = []
+
+                        for requested_project in set(data["projects"]):
+                            for idx in self.projects:
+                                project = self.projects[idx]
+                                if requested_project == project["project"]:
+                                    for dc_file in project["dc_files"]:
+                                        self._daemon_info_lock.acquire()
+                                        self._daemon_info["jobs"].append({
+                                            "project": copy.copy(project),
+                                            "dc_file": dc_file,
+                                            "commit": project["vcs_lastrev"],
+                                            "status": 0,
+                                            "container_id": "",
+                                            "time_started": 0
+                                        })
+
+                                        self._daemon_info["scheduled_builds"] += 1
+                                        self._daemon_info_lock.release()
+
+                                    valid_projects.append(project["project"])
+                                    break
+
                         # send answer
                         yield from websocket.send(json.dumps({
                             "id": 2,
-                            "triggered_build": valid_dcs
+                            "dc_files": valid_dcs,
+                            "projects": valid_projects
                         }))
                     else:
                         # close if an invalid packet was received

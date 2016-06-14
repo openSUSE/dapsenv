@@ -22,7 +22,7 @@ import json
 import websockets
 from dapsenv.actions.action import Action
 from dapsenv.exitcodes import E_API_SERVER_CONN_FAILED, E_API_SERVER_CLOSED_CONNECTION, \
-                              E_API_SERVER_INVALID_DATA_SENT
+                              E_API_SERVER_INVALID_DATA_SENT, E_INVALID_CLI
 from dapsenv.logmanager import log
 from dapsenv.shellcolors import red
 from datetime import datetime
@@ -40,8 +40,13 @@ class Triggerbuild(Action):
         self._args = args
         self._ip = self._args["ip"]
         self._port = self._args["port"]
-        self._dc_files = self._args["dc_files"]
+        self._dc_files = self._args["dcfiles"]
+        self._projects = self._args["projects"]
         self._error = 0
+
+        if not self._dc_files and not self._projects:
+            log.error("You must specify either --projects or --dcfiles!")
+            sys.exit(E_INVALID_CLI)
 
         asyncio.get_event_loop().run_until_complete(self.start_client())
 
@@ -53,8 +58,16 @@ class Triggerbuild(Action):
         try:
             ws = yield from websockets.connect("ws://{}:{}/".format(self._ip, self._port))
 
+            if not self._dc_files:
+                self._dc_files = []
+
+            if not self._projects:
+                self._projects = []
+
             # request status information packet
-            yield from ws.send(json.dumps({ "id": 2, "dc_files": self._dc_files }))
+            yield from ws.send(json.dumps({
+                "id": 2, "dc_files": self._dc_files, "projects": self._projects
+            }))
 
             # fetch server message
             res = yield from ws.recv()
@@ -62,12 +75,19 @@ class Triggerbuild(Action):
                 res = json.loads(res)
 
                 for dc_file in self._dc_files:
-                    if dc_file in res["triggered_build"]:
+                    if dc_file in res["dc_files"]:
                         print("Build request scheduled for DC-File '{}'.".format(dc_file))
+                    else:
+                        sys.stderr.write(red("Error: Could not find DC-File '{}' in any " \
+                            "projects.\n".format(dc_file)))
 
-                for dc_file in self._dc_files:
-                    if not dc_file in res["triggered_build"]:
-                        sys.stderr.write(red("Error: Could not find DC-File '{}' in any projects.\n".format(dc_file)))
+                for project in self._projects:
+                    if project in res["projects"]:
+                        print("Build request scheduled for project '{}'.".format(project))
+                    else:
+                        sys.stderr.write(red("Error: Invalid project name '{}'.\n".format(
+                            project
+                        )))
 
             except ValueError:
                 log.error("Invalid data received from API server.")
