@@ -2,11 +2,6 @@ graft man
 prune man/build
 
 include source/dapsenv/templates/dapsenv.conf
-include source/dapsenv/data/build.sh
-include source/dapsenv/data/cleanup.sh
-include source/dapsenv/data/guidename.xsl
-include source/dapsenv/data/productname.xsl
-include source/dapsenv/data/productnumber.xsl
-include source/dapsenv/data/rootid.xsl
+include source/dapsenv/data/*
 
 global-exclude *.py[cod] __pycache__ *.so *.dylib
