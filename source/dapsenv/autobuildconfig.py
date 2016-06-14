@@ -20,6 +20,7 @@ import dapsenv.git as Git
 import re
 import threading
 from collections import OrderedDict
+from dapsenv.dcfile import DCFile
 from dapsenv.exceptions import AutoBuildConfigSyntaxErrorException, AutoBuildConfigNotFound
 from lxml import etree
 from lxml.etree import XMLSyntaxError
@@ -65,7 +66,10 @@ class AutoBuildConfig:
 
             data[index] = {}
             data[index]["project"] = project_name
-            data[index]["dc_files"] = self._parse_dc_files(dc_files)
+            data[index]["dc_files"] = self._parse_dc_files(
+                vcs_data.find("checkout").text,
+                dc_files
+            )
             data[index]["vcs"] = vcs_data.attrib["type"]
             data[index]["vcs_branch"] = vcs_data.attrib["branch"]
             data[index]["vcs_type"] = vcs_data.attrib["type"]
@@ -109,10 +113,18 @@ class AutoBuildConfig:
 
         self._write_lock.release()
 
-    def _parse_dc_files(self, dc_files):
+    def _parse_dc_files(self, repo_dir, dc_files):
         """Remove all trash characters from the 'dcfiles' element
 
-        :return list: A list with all DC files
+        :param string repo_dir: path to the Repository
+        :param string dc_files: the content of the <dcfiles/> element
+        :return OrderedDict: A dict with all dc_files
         """
 
-        return self._dcfiles_pattern.findall(dc_files)
+        dcs = self._dcfiles_pattern.findall(dc_files)
+        dc_files = OrderedDict()
+
+        for dc in dcs:
+            dc_files[dc] = DCFile("{}/{}".format(repo_dir, dc))
+
+        return dc_files

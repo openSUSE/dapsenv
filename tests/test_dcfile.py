@@ -1,3 +1,4 @@
+import os
 import pytest
 from dapsenv.exceptions import DCFileMAINNotFoundException
 from dapsenv.dcfile import DCFile
@@ -34,6 +35,10 @@ data = [
 @pytest.mark.parametrize("dcfile,expected_main,expected_rootid", data)
 def test_tryparse(dcfile, expected_main, expected_rootid, tmpdir):
     test_file = make_tmp_file(dcfile, tmpdir)
+    main_path = "{}/xml/{}".format(
+        os.path.dirname(os.path.realpath(test_file.__str__())),
+        expected_main
+    )
     dc = None
 
     with pytest.raises(Failed):
@@ -41,6 +46,7 @@ def test_tryparse(dcfile, expected_main, expected_rootid, tmpdir):
             dc = DCFile(test_file.__str__())
 
     assert dc.main == expected_main
+    assert dc.main_path == main_path
     assert dc.rootid == expected_rootid
 
 data = [

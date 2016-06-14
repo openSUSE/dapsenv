@@ -19,6 +19,7 @@
 import asyncio
 import copy
 import dapsenv.configmanager as configmanager
+import dapsenv.xslt as xslt
 import grp
 import json
 import os
@@ -33,7 +34,8 @@ from dapsenv.docker import Container
 from dapsenv.dockerregistry import is_image_imported
 from dapsenv.exceptions import AutoBuildConfigurationErrorException, \
                                UserNotInDockerGroupException, GitInvalidRepoException, \
-                               DockerImageMissingException
+                               DockerImageMissingException, InvalidRootIDException, \
+                               GitErrorException
 from dapsenv.exitcodes import E_INVALID_GIT_REPO, E_DOCKER_IMAGE_MISSING
 from dapsenv.general import DAEMON_DEFAULT_INTERVAL, BUILDS_DIR, DAEMON_DEFAULT_MAX_CONTAINERS, \
                             API_SERVER_DEFAULT_PORT, LOG_DIR, CONTAINER_IMAGE
@@ -197,7 +199,7 @@ class Daemon(Action):
                                 if dc_file in project["dc_files"]:
                                     self._daemon_info_lock.acquire()
                                     self._daemon_info["jobs"].append({
-                                        "project": copy.deepcopy(self.projects[idx]),
+                                        "project": copy.copy(self.projects[idx]),
                                         "dc_file": dc_file[:],
                                         "commit": project["vcs_lastrev"],
                                         "status": 0,
@@ -276,7 +278,7 @@ class Daemon(Action):
             # get a list of all available jobs
             self._daemon_info_lock.acquire()
             running_builds = copy.copy(self._daemon_info["running_builds"])
-            jobs = copy.deepcopy(self._daemon_info["jobs"])
+            jobs = copy.copy(self._daemon_info["jobs"])
             self._daemon_info_lock.release()
 
             # search for new jobs in queue
@@ -289,7 +291,7 @@ class Daemon(Action):
                         # create thread
                         thread = threading.Thread(
                             target=self._process,
-                            args=(copy.deepcopy(job["project"]), job["dc_file"][:])
+                            args=(copy.copy(job["project"]), job["dc_file"][:])
                         )
 
                         # start thread
@@ -335,24 +337,58 @@ class Daemon(Action):
 
             # check if the last commit hash got changed
             if self.projects[i]["vcs_lastrev"] != commit:
+                old_commit = self.projects[i]["vcs_lastrev"]
+
                 # update to the new commit hash
                 self.projects[i]["vcs_lastrev"] = commit[:]
                 self.autoBuildConfig.updateCommitHash(self.projects[i]["project"], commit[:])
 
-                # add new job for each DC-file
-                for dc_file in self.projects[i]["dc_files"]:
-                    self._daemon_info_lock.acquire()
-                    self._daemon_info["jobs"].append({
-                        "project": copy.deepcopy(self.projects[i]),
-                        "dc_file": dc_file[:],
-                        "commit": commit[:],
-                        "status": 0,
-                        "container_id": "",
-                        "time_started": 0
-                    })
+                # get changed files
+                changed_files = []
 
-                    self._daemon_info["scheduled_builds"] += 1
-                    self._daemon_info_lock.release()
+                try:
+                    changed_files = self.projects[i]["repo"].getChangedFilesBetweenCommits(
+                        old_commit, commit
+                    )
+                except GitErrorException:
+                    pass
+
+                # determine assigned DC file for each changed file
+                for dc_file, dc_object in self.projects[i]["dc_files"].items():
+                    build = False
+
+                    if dc_object.rootid:
+                        try:
+                            assigned_files = xslt.getAllUsedFiles(
+                                "{}/xml/{}".format(self.projects[i]["vcs_repodir"], dc_object.main),
+                                dc_object.rootid
+                            )
+
+                            # is at least one element from "changed_files" in "assigned_files"
+                            res = lambda a, b: any(i in assigned_files for i in changed_files)
+
+                            if res:
+                                build = True
+                        except InvalidRootIDException:
+                            log.error("Invalid root id in main file '{}' of DC File '{}' specified. Repository: {}".format(
+                                dc_object.main, dc_file, self.projects[i]["vcs_repodir"]
+                            ))
+                    else:
+                        build = True
+
+                    if build:
+                        self._daemon_info_lock.acquire()
+                        self._daemon_info["jobs"].append({
+                            "project": copy.copy(self.projects[i]),
+                            "dc_file": dc_file[:],
+                            "commit": commit[:],
+                            "status": 0,
+                            "container_id": "",
+                            "time_started": 0
+                        })
+
+                        self._daemon_info["scheduled_builds"] += 1
+                        self._daemon_info_lock.release()
 
     def _process(self, project_info, dc_file):
         """Thread function to start containers and build documentations
@@ -383,6 +419,7 @@ class Daemon(Action):
 
         for f in build_formats:
             # building the documentation
+            #pdb.set_trace()
             result = container.buildDocumentation(dc_file, f)
 
             archive = result["archive_name"]
@@ -466,6 +503,9 @@ class Daemon(Action):
                         self._ircbot.sendChannelMessage(message)
 
                 self._irclock.release()
+
+            # execute cleanup script
+            container.cleanup()
 
         # update amount of running builds
         self._daemon_info_lock.acquire()

@@ -16,6 +16,7 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
+import os
 import re
 from dapsenv.exceptions import DCFileMAINNotFoundException
 
@@ -23,6 +24,7 @@ class DCFile:
     def __init__(self, path):
         self._path = path
         self._main = None
+        self._main_path = None
         self._rootid = None
         
         self._search_pattern_main = re.compile("^MAIN\=(.*)$")
@@ -35,6 +37,10 @@ class DCFile:
             for line in dcfile:
                 if self._search_pattern_main.match(line):
                     self._main = self._getValue(line)
+                    self._main_path = "{}/xml/{}".format(
+                        os.path.dirname(os.path.realpath(self._path)),
+                        self._main
+                    )
                 elif self._search_pattern_rootid.match(line):
                     self._rootid = self._getValue(line)
 
@@ -57,6 +63,10 @@ class DCFile:
     @property
     def main(self):
         return self._main
+
+    @property
+    def main_path(self):
+        return self._main_path
 
     @property
     def rootid(self):
