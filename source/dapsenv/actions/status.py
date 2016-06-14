@@ -66,25 +66,41 @@ class Status(Action):
                 print("Running Builds:\t\t{}".format(res["running_builds"]))
                 print("Scheduled Builds:\t{}".format(res["scheduled_builds"]))
 
+                table_running = PrettyTable(["Project", "DC-File", "Branch", "Commit", "Started"])
+                table_scheduled = PrettyTable(["Project", "DC-File", "Branch", "Commit"])
+                
+                for job in res["jobs"]:
+                    # append only running builds
+                    if job["status"]:
+                        table_running.add_row([
+                            job["project"],
+                            job["dc_file"],
+                            job["branch"],
+                            job["commit"][:24],
+                            datetime.fromtimestamp(job["time_started"]).strftime(
+                                "%m/%d/%Y %H:%M:%S"
+                            )
+                        ])
+                    else:
+                        table_scheduled.add_row([
+                            job["project"],
+                            job["dc_file"],
+                            job["branch"],
+                            job["commit"][:24]
+                        ])
+
                 if res["running_builds"]:
                     print("\nCurrent Running Jobs:")
+                    print(table_running)
+                    print()
 
-                    table = PrettyTable(["Project", "DC-File", "Branch", "Commit", "Started"])
+                if res["scheduled_builds"]:
+                    if res["running_builds"]:
+                        print("Scheduled Jobs:")
+                    else:
+                        print("\nScheduled Jobs:")
 
-                    for job in res["jobs"]:
-                        # append only running builds
-                        if job["status"]:
-                            table.add_row([
-                                job["project"],
-                                job["dc_file"],
-                                job["branch"],
-                                job["commit"][:24],
-                                datetime.fromtimestamp(job["time_started"]).strftime(
-                                    "%m/%d/%Y %H:%M:%S"
-                                )
-                            ])
-
-                    print(table)
+                    print(table_scheduled)
                     print()
             except ValueError:
                 log.error("Invalid data received from API server.")
