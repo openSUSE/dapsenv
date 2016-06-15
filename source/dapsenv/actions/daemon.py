@@ -28,6 +28,7 @@ import sys
 import threading
 import time
 import websockets
+from collections import OrderedDict
 from dapsenv.actions.action import Action
 from dapsenv.autobuildconfig import AutoBuildConfig
 from dapsenv.docker import Container
@@ -249,6 +250,21 @@ class Daemon(Action):
                             "dc_files": valid_dcs,
                             "projects": valid_projects
                         }))
+                    # project list
+                    if data["id"] == 3:
+                        projects = OrderedDict()
+
+                        for idx in self.projects:
+                            project = self.projects[idx]
+                            projects[project["project"]] = list(project["dc_files"].keys())
+
+                        # answer
+                        yield from websocket.send(json.dumps(
+                            {
+                                "id": data["id"],
+                                "projects": projects
+                            }
+                        ))
                     else:
                         # close if an invalid packet was received
                         yield from websocket.close()

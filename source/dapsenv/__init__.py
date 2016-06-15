@@ -72,7 +72,9 @@ def execute(args):
         "status": "status",
         "s": "status",
         "trigger-build": "triggerbuild",
-        "tb": "triggerbuild"
+        "tb": "triggerbuild",
+        "project-list": "projectlist",
+        "pl": "projectlist"
     }
 
     action = command[args["action"]]

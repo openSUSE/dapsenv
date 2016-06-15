@@ -37,6 +37,7 @@ class ArgParser:
         self.addDaemonCommand()
         self.addStatusCommand()
         self.addTriggerBuildCommand()
+        self.addProjectListComamnd()
 
     def print_help(self):
         self.parser.print_help()
@@ -182,4 +183,30 @@ class ArgParser:
         cmd.add_argument(
             "--dcfiles", "-d", nargs="+", action="store",
             help="Schedules builds for the given DC-Files."
+        )
+
+    def addProjectListComamnd(self):
+        default_ip = configmanager.get_prop("api_client_default_ip")
+        if not default_ip:
+            default_ip = "127.0.0.1"
+
+        default_port = 5555
+        try:
+            default_port = int(configmanager.get_prop("api_client_default_port"))
+        except ValueError:
+            pass
+
+        cmd = self.cmdSubParser.add_parser(
+            "project-list", aliases=["pl"], help="Retrieves a list of all projects on a " \
+            "DapsEnv instance."
+        )
+
+        cmd.add_argument(
+            "--ip", "-i", action="store", default=default_ip,
+            help="Sets the IP of the API server."
+        )
+
+        cmd.add_argument(
+            "--port", "-p", action="store", default=default_port,
+            help="Sets the port of the API server."
         )
