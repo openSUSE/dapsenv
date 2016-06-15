@@ -75,12 +75,11 @@ setupdict = dict(
         'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
 
         # Supported Python versions
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
     ],
 
     # What does your project relate to?
-    keywords='docbook5 metainformation',
+    keywords='DAPS Build Environment',
 
     # Includes data files from MANIFEST.in
     #
@@ -90,8 +89,7 @@ setupdict = dict(
     include_package_data = True,
 
     install_requires=[
-        'asyncio', 'websockets>=3.1'
-        'docker-py', 'lxml>= 3.3.5',
+        'websockets>=3.1', 'lxml>= 3.3.5',
         'irc',
     ],
 
