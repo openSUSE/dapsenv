@@ -89,7 +89,11 @@ def execute(args):
         "project-list": "projectlist",
         "pl": "projectlist",
         "token": "token",
-        "t": "token"
+        "t": "token",
+        "token-authorize": "tokenauthorize",
+        "ta": "tokenauthorize",
+        "token-deauthorize": "tokendeauthorize",
+        "td": "tokendeauthorize"
     }
 
     action = command[args["action"]]

@@ -21,6 +21,7 @@ from dapsenv.exitcodes import E_INVALID_CLI, E_NO_IMPLEMENTATION_FOUND, E_CONFIG
                               E_CONFIG_FILE_PERMISSION_DENIED, E_CONFIG_FILE_NOT_CREATED, \
                               E_CONFIG_AUTOBUILD_ERROR, E_AUTOBUILDCONFIG_SYNTAX_ERROR, \
                               E_AUTOBUILDCONFIG_NOT_FOUND, E_NOT_DOCKER_GROUP_MEMBER
+from dapsenv.general import TOKEN_LENGTH
 from dapsenv.logmanager import log
 
 class DapsEnvException(Exception):
@@ -185,6 +186,56 @@ class InvalidRootIDException(DapsEnvException):
     def __init__(self, rootid):
         self.rootid = rootid
         self.message = "Unknown root id '{}'.".format(rootid)
+
+    def __str__(self):
+        return self.message
+
+class AuthFileNotInitializedException(DapsEnvException):
+    def __init__(self, file_name, message):
+        self.file_name = file_name
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
+class AuthFileParseException(DapsEnvException):
+    def __init__(self, file_name, message):
+        self.file_name = file_name
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
+class InvalidTokenLengthException(DapsEnvException):
+    def __init__(self, token):
+        self.token = token
+        self.message = "Invalid length of token '{}'. A token must " \
+            "have a length of {} characters.".format(token, TOKEN_LENGTH)
+
+    def __str__(self):
+        return self.message
+
+class InvalidTokenCharsException(DapsEnvException):
+    def __init__(self, token):
+        self.token = token
+        self.message = "Token '{}' has invalid characters. A token must only have " \
+            "letters and numbers.".format(token)
+
+    def __str__(self):
+        return self.message
+
+class TokenAlreadyAuthorizedException(DapsEnvException):
+    def __init__(self, token):
+        self.token = token
+        self.message = "Token '{}' is already authorized.".format(token)
+
+    def __str__(self):
+        return self.message
+
+class TokenNotAuthorizedException(DapsEnvException):
+    def __init__(self, token):
+        self.token = token
+        self.message = "Token '{}' is not authorized.".format(token)
 
     def __str__(self):
         return self.message

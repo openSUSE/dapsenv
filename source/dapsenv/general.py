@@ -16,6 +16,7 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
+import re
 from os import path
 
 # specifies the current version of this program
@@ -65,3 +66,6 @@ API_SERVER_DEFAULT_PORT=5555
 
 # max token length
 TOKEN_LENGTH=32
+
+# token validation pattern
+TOKEN_PATTERN = re.compile("^[a-zA-Z0-9]+$")

@@ -39,6 +39,8 @@ class ArgParser:
         self.addTriggerBuildCommand()
         self.addProjectListComamnd()
         self.addTokenCommand()
+        self.addTokenAuthorizeCommand()
+        self.addTokenDeauthorizeCommand()
 
     def print_help(self):
         self.parser.print_help()
@@ -58,7 +60,7 @@ class ArgParser:
 
     def addConfigCommand(self):
         cmd = self.cmdSubParser.add_parser(
-            "config", aliases=["c"], help="Modifying the configuration file"
+            "config", aliases=["c"], help="Modifying the configuration file."
         )
 
         config_group = cmd.add_mutually_exclusive_group(required=True)
@@ -239,10 +241,32 @@ class ArgParser:
 
     def addTokenCommand(self):
         cmd = self.cmdSubParser.add_parser(
-            "token", aliases=["t"], help="Manage the client token"
+            "token", aliases=["t"], help="Manage the client token."
         )
 
         cmd.add_argument(
             "--regenerate-token", "-r", action="store_true", help="Forces a regeneration of the " \
             "client token."
+        )
+
+    def addTokenAuthorizeCommand(self):
+        cmd = self.cmdSubParser.add_parser(
+            "token-authorize", aliases=["ta"], help="Authorizes one or more tokens for Daemon " \
+            "commands."
+        )
+
+        cmd.add_argument(
+            "tokens", nargs="+", metavar="TOKENS", help="A list (separated by spaces) of tokens " \
+            "to authorize."
+        )
+
+    def addTokenDeauthorizeCommand(self):
+        cmd = self.cmdSubParser.add_parser(
+            "token-deauthorize", aliases=["td"], help="Deauthorizes one or more tokens from " \
+            "issuing Daemon commands."
+        )
+
+        cmd.add_argument(
+            "tokens", nargs="+", metavar="TOKENS", help="A list (separated by spaces) of tokens " \
+            "to deauthorize."
         )
