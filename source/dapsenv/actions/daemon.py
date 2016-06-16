@@ -42,6 +42,8 @@ from dapsenv.general import DAEMON_DEFAULT_INTERVAL, BUILDS_DIR, DAEMON_DEFAULT_
                             API_SERVER_DEFAULT_PORT, LOG_DIR, CONTAINER_IMAGE
 from dapsenv.ircbot import IRCBot
 from dapsenv.logmanager import log
+from dapsenv.logserver import LogServer
+from http.server import HTTPServer
 from socket import gethostname
 
 class Daemon(Action):
@@ -66,6 +68,11 @@ class Daemon(Action):
         # start api server
         self._api_server_start()
 
+        # start log server if wanted
+        if self._logserver:
+            thread = threading.Thread(target=self._start_logserver)
+            thread.start()
+
         # start daemon
         self.start()
 
@@ -76,8 +83,12 @@ class Daemon(Action):
         self._useirc = self._args["use_irc"]
         self._noout = self._args["no_output"]
         self._debug = self._args["debug"]
+        self._logserver = self._args["use_logserver"]
+        self._logserver_ip = self._args["logserver_ip"]
+        self._logserver_port = self._args["logserver_port"]
         self._irc_config = {}
         self._ircbot = None
+        self._logserver_httpd = None
         self._hostname = gethostname()
 
         self._daemon_info = {
@@ -299,6 +310,13 @@ class Daemon(Action):
         elif not self._api_server == "false":
             log.warn("Invalid option specified for 'api_server' in config file! Valid options: " \
                 "true/false")
+
+    def _start_logserver(self):
+        """Starts the HTTP log server
+        """
+
+        self._logserver_httpd = HTTPServer((self._logserver_ip, self._logserver_port), LogServer)
+        self._logserver_httpd.serve_forever()
 
     def start(self):
         """Starts the daemon
@@ -522,12 +540,25 @@ class Daemon(Action):
 
                 self._irclock.release()
             else:
-                error_log_path = "{}/build_fail_{}_{}_{}.log".format(
-                    LOG_DIR,
+                error_log_name = "build_fail_{}_{}_{}".format(
                     result["dc_file"],
                     result["format"],
                     int(time.time())
                 )
+
+                error_log_path = "{}/{}.log".format(
+                    LOG_DIR,
+                    error_log_name
+                )
+
+                if self._logserver:
+                    irc_path = "http://{}:{}/logs/{}".format(
+                        self._logserver_ip,
+                        self._logserver_port,
+                        error_log_name
+                    )
+                else:
+                    irc_path = error_log_path
 
                 with open(error_log_path, "w+") as f:
                     f.write(result["build_log"])
@@ -540,7 +571,7 @@ class Daemon(Action):
                             self._hostname,
                             result["dc_file"],
                             result["format"],
-                            error_log_path
+                            irc_path
                         )
 
                     for client in project_info["notifications"]["irc"]:

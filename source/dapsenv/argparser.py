@@ -101,6 +101,16 @@ class ArgParser:
         )
 
     def addDaemonCommand(self):
+        logmanager_ip = configmanager.get_prop("logmanager_ip")
+        if not logmanager_ip:
+            default_ip = "127.0.0.1"
+
+        logmanager_port = 5556
+        try:
+            logmanager_port = int(configmanager.get_prop("logmanager_port"))
+        except ValueError:
+            pass
+
         cmd = self.cmdSubParser.add_parser(
             "daemon", aliases=["d"], help="This command starts a daemon which takes care of " \
             "the documentation building process."
@@ -109,6 +119,21 @@ class ArgParser:
         cmd.add_argument(
             "--use-irc", "-i", action="store_true", help="Connects to the IRC server what is " \
             "configured in the configuration file."
+        )
+
+        cmd.add_argument(
+            "--use-logserver", "-l", action="store_true", help="Starts an HTTP server what " \
+            "provides access to build log files."
+        )
+
+        cmd.add_argument(
+            "--logserver-ip", action="store", default=logmanager_ip, help="The IP address the log " \
+            "server should listen to."
+        )
+
+        cmd.add_argument(
+            "--logserver-port", action="store", default=logmanager_port, help="The IP address the log " \
+            "server should listen to."
         )
 
         cmd.add_argument(
