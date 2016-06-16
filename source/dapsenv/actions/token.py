@@ -28,6 +28,6 @@ class Token(Action):
         """
 
         if not args["regenerate_token"]:
-        	print(token.getToken())
+            print(token.getToken())
         else:
-        	print(token.regenerateToken())
+            print(token.regenerateToken())
