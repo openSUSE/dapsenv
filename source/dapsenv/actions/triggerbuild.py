@@ -25,6 +25,7 @@ from dapsenv.exitcodes import E_API_SERVER_CONN_FAILED, E_API_SERVER_CLOSED_CONN
                               E_API_SERVER_INVALID_DATA_SENT, E_INVALID_CLI
 from dapsenv.logmanager import log
 from dapsenv.shellcolors import red
+from dapsenv.token import getToken
 from datetime import datetime
 from prettytable import PrettyTable
 from socket import gaierror
@@ -66,7 +67,8 @@ class Triggerbuild(Action):
 
             # request status information packet
             yield from ws.send(json.dumps({
-                "id": 2, "dc_files": self._dc_files, "projects": self._projects
+                "id": 2, "token": getToken(), "dc_files": self._dc_files,
+                "projects": self._projects
             }))
 
             # fetch server message
@@ -74,20 +76,23 @@ class Triggerbuild(Action):
             try:
                 res = json.loads(res)
 
-                for dc_file in self._dc_files:
-                    if dc_file in res["dc_files"]:
-                        print("Build request scheduled for DC-File '{}'.".format(dc_file))
-                    else:
-                        sys.stderr.write(red("Error: Could not find DC-File '{}' in any " \
-                            "projects.\n".format(dc_file)))
+                if "error" in res:
+                    sys.stderr.write(red("Error: {}\n".format(res["error"])))
+                else:
+                    for dc_file in self._dc_files:
+                        if dc_file in res["dc_files"]:
+                            print("Build request scheduled for DC-File '{}'.".format(dc_file))
+                        else:
+                            sys.stderr.write(red("Error: Could not find DC-File '{}' in any " \
+                                "projects.\n".format(dc_file)))
 
-                for project in self._projects:
-                    if project in res["projects"]:
-                        print("Build request scheduled for project '{}'.".format(project))
-                    else:
-                        sys.stderr.write(red("Error: Invalid project name '{}'.\n".format(
-                            project
-                        )))
+                    for project in self._projects:
+                        if project in res["projects"]:
+                            print("Build request scheduled for project '{}'.".format(project))
+                        else:
+                            sys.stderr.write(red("Error: Invalid project name '{}'.\n".format(
+                                project
+                            )))
 
             except ValueError:
                 log.error("Invalid data received from API server.")

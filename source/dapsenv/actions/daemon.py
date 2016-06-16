@@ -31,6 +31,7 @@ import websockets
 from collections import OrderedDict
 from dapsenv.actions.action import Action
 from dapsenv.autobuildconfig import AutoBuildConfig
+from dapsenv.daemonauth import DaemonAuth
 from dapsenv.docker import Container
 from dapsenv.dockerregistry import is_image_imported
 from dapsenv.exceptions import AutoBuildConfigurationErrorException, \
@@ -39,7 +40,7 @@ from dapsenv.exceptions import AutoBuildConfigurationErrorException, \
                                GitErrorException
 from dapsenv.exitcodes import E_INVALID_GIT_REPO, E_DOCKER_IMAGE_MISSING
 from dapsenv.general import DAEMON_DEFAULT_INTERVAL, BUILDS_DIR, DAEMON_DEFAULT_MAX_CONTAINERS, \
-                            API_SERVER_DEFAULT_PORT, LOG_DIR, CONTAINER_IMAGE
+                            API_SERVER_DEFAULT_PORT, LOG_DIR, CONTAINER_IMAGE, DAEMON_AUTH_PATH
 from dapsenv.ircbot import IRCBot
 from dapsenv.logmanager import log
 from dapsenv.logserver import LogServer
@@ -90,6 +91,7 @@ class Daemon(Action):
         self._ircbot = None
         self._logserver_httpd = None
         self._hostname = gethostname()
+        self._auth = DaemonAuth(DAEMON_AUTH_PATH)
 
         self._daemon_info = {
             "jobs": [],
@@ -198,7 +200,7 @@ class Daemon(Action):
                     # trigger build request
                     elif data["id"] == 2:
                         # check for correct data packages
-                        if not "dc_files" in data or not "projects" in data:
+                        if not "dc_files" in data or not "projects" in data or not "token" in data:
                             yield from websocket.close()
                             return
 
@@ -207,6 +209,13 @@ class Daemon(Action):
                             
                             yield from websocket.close()
                             return
+
+                        # check token
+                        if not data["token"] in self._auth.tokens:
+                            yield from websocket.send(json.dumps({
+                                "id": 2,
+                                "error": "You are not authorized to trigger a build!"
+                            }))
 
                         # find projects for dc files and trigger builds
                         valid_dcs = []

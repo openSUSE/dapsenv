@@ -34,32 +34,29 @@ CONTAINER_REPO_DIR="/tmp/build"
 # the name of the docker image
 CONTAINER_IMAGE="mschnitzer/dapsenv"
 
-# user directory
-USER_DIR="{}/.dapsenv".format(path.expanduser("~"))
-
 # source directory of this python project
 SOURCE_DIR=path.dirname(path.realpath(__file__))
 
 # home directory
-HOME_DIR="{}/.dapsenv".format(USER_DIR)
+HOME_DIR="{}/.dapsenv".format(path.expanduser("~"))
 
 # error log directory
-LOG_DIR="{}/.dapsenv/logs".format(USER_DIR)
+LOG_DIR="{}/logs".format(HOME_DIR)
 
 # tmp directory
-TMP_DIR="{}/.dapsenv/tmp".format(USER_DIR)
+TMP_DIR="{}/tmp".format(HOME_DIR)
 
 # tmp directory
-BUILDS_DIR="{}/.dapsenv/builds".format(USER_DIR)
+BUILDS_DIR="{}/builds".format(HOME_DIR)
 
 # templates location
 TEMPLATE_PATH="{}/templates".format(SOURCE_DIR)
 
 # daemon-auth.xml file location
-DAEMON_AUTH_PATH="{}/daemon-auth.xml".format(USER_DIR)
+DAEMON_AUTH_PATH="{}/daemon-auth.xml".format(HOME_DIR)
 
 # token file
-CLIENT_TOKEN_PATH="{}/token".format(USER_DIR)
+CLIENT_TOKEN_PATH="{}/token".format(HOME_DIR)
 
 # api server default port
 API_SERVER_DEFAULT_PORT=5555
