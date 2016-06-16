@@ -1,7 +1,7 @@
 graft man
 prune man/build
 
-include source/dapsenv/templates/dapsenv.conf
+include source/dapsenv/templates/*
 include source/dapsenv/data/*
 
 global-exclude *.py[cod] __pycache__ *.so *.dylib

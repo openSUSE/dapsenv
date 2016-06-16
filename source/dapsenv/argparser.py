@@ -38,6 +38,7 @@ class ArgParser:
         self.addStatusCommand()
         self.addTriggerBuildCommand()
         self.addProjectListComamnd()
+        self.addTokenCommand()
 
     def print_help(self):
         self.parser.print_help()
@@ -234,4 +235,14 @@ class ArgParser:
         cmd.add_argument(
             "--port", "-p", action="store", default=default_port,
             help="Sets the port of the API server."
+        )
+
+    def addTokenCommand(self):
+        cmd = self.cmdSubParser.add_parser(
+            "token", aliases=["t"], help="Manage the client token"
+        )
+
+        cmd.add_argument(
+            "--regenerate-token", "-r", action="store_true", help="Forces a regeneration of the " \
+            "client token."
         )

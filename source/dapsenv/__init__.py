@@ -17,15 +17,19 @@
 # you may find current contact information at www.suse.com
 
 import os
+import stat
 import sys
 from dapsenv.argparser import ArgParser
 from dapsenv.exceptions import InvalidCommandLineException, InvalidActionException
-from dapsenv.general import HOME_DIR, LOG_DIR, TMP_DIR, BUILDS_DIR
+from dapsenv.general import HOME_DIR, LOG_DIR, TMP_DIR, BUILDS_DIR, TEMPLATE_PATH, \
+                            DAEMON_AUTH_PATH, CLIENT_TOKEN_PATH, TOKEN_LENGTH
 from dapsenv.logmanager import set_log_level
+from dapsenv.utils import randomString
 from importlib import import_module
+from shutil import copyfile
 
 def main(args=None):
-    create_dirs()
+    create_files()
 
     if not args:
         args = sys.argv[1:]
@@ -45,10 +49,11 @@ def main(args=None):
     # execute
     execute(parsed_args)
 
-def create_dirs():
-    """Creates all necessary directories
+def create_files():
+    """Creates all necessary files and directories
     """
 
+    # directories
     if not os.path.exists(HOME_DIR):
         os.makedirs(HOME_DIR)
 
@@ -58,8 +63,16 @@ def create_dirs():
     if not os.path.exists(TMP_DIR):
         os.makedirs(TMP_DIR)
 
-    if not os.path.exists(BUILDS_DIR):
-        os.makedirs(BUILDS_DIR)
+    # files
+    if not os.path.exists(CLIENT_TOKEN_PATH):
+        with open(CLIENT_TOKEN_PATH, "w") as token_file:
+            token_file.write(randomString(TOKEN_LENGTH))
+
+        os.chmod(CLIENT_TOKEN_PATH, stat.S_IREAD | stat.S_IWRITE)
+
+    if not os.path.exists(DAEMON_AUTH_PATH):
+        copyfile("{}/daemon-auth.xml".format(TEMPLATE_PATH), DAEMON_AUTH_PATH)
+        os.chmod(DAEMON_AUTH_PATH, stat.S_IREAD | stat.S_IWRITE)
 
 def execute(args):
     # for the passed action/sub-command it's required to find the appropriate "Action Class". Each
@@ -74,7 +87,9 @@ def execute(args):
         "trigger-build": "triggerbuild",
         "tb": "triggerbuild",
         "project-list": "projectlist",
-        "pl": "projectlist"
+        "pl": "projectlist",
+        "token": "token",
+        "t": "token"
     }
 
     action = command[args["action"]]
