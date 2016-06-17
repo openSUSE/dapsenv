@@ -165,93 +165,70 @@ class Daemon(Action):
         """
 
         while True:
-            # wait until the client sends data to the API server
             try:
-                data = yield from websocket.recv()
-            except websockets.exceptions.ConnectionClosed:
-                return
-
-            try:
-                # parse the sent data as json
-                data = json.loads(data)
-
-                # check for correct data packets
-                if not "id" in data:
-                    yield from websocket.close()
+                # wait until the client sends data to the API server
+                try:
+                    data = yield from websocket.recv()
+                except websockets.exceptions.ConnectionClosed:
                     return
-                else:
-                    # accessing thread-safe daemon information
-                    self._daemon_info_lock.acquire()
-                    running_builds = copy.copy(self._daemon_info["running_builds"])
-                    scheduled_builds = copy.copy(self._daemon_info["scheduled_builds"])
-                    self._daemon_info_lock.release()
 
-                    # receive daemon status
-                    if data["id"] == 1:
-                        # answer
-                        yield from websocket.send(json.dumps(
-                            {
-                                "id": data["id"],
-                                "running_builds": running_builds,
-                                "scheduled_builds": scheduled_builds,
-                                "jobs": self.getJobList()
-                            }
-                        ))
-                    # trigger build request
-                    elif data["id"] == 2:
-                        # check for correct data packages
-                        if not "dc_files" in data or not "projects" in data or not "token" in data:
-                            yield from websocket.close()
-                            return
+                try:
+                    # parse the sent data as json
+                    data = json.loads(data)
 
-                        if type(data["dc_files"]) != type(list()) or \
-                            type(data["projects"]) != type(list()):
-                            
-                            yield from websocket.close()
-                            return
+                    # check for correct data packets
+                    if not "id" in data:
+                        yield from websocket.close()
+                        return
+                    else:
+                        # accessing thread-safe daemon information
+                        self._daemon_info_lock.acquire()
+                        running_builds = copy.copy(self._daemon_info["running_builds"])
+                        scheduled_builds = copy.copy(self._daemon_info["scheduled_builds"])
+                        self._daemon_info_lock.release()
 
-                        # check token
-                        if not data["token"] in self._auth.tokens:
-                            yield from websocket.send(json.dumps({
-                                "id": 2,
-                                "error": "You are not authorized to trigger a build!"
-                            }))
+                        # receive daemon status
+                        if data["id"] == 1:
+                            # answer
+                            yield from websocket.send(json.dumps(
+                                {
+                                    "id": data["id"],
+                                    "running_builds": running_builds,
+                                    "scheduled_builds": scheduled_builds,
+                                    "jobs": self.getJobList()
+                                }
+                            ))
+                        # trigger build request
+                        elif data["id"] == 2:
+                            # check for correct data packages
+                            if not "dc_files" in data or not "projects" in data or not "token" in data:
+                                yield from websocket.close()
+                                return
 
-                        # find projects for dc files and trigger builds
-                        valid_dcs = []
+                            if type(data["dc_files"]) != type(list()) or \
+                                type(data["projects"]) != type(list()):
 
-                        for dc_file in set(data["dc_files"]):
-                            for idx in self.projects:
-                                project = self.projects[idx]
-                                if dc_file in project["dc_files"]:
-                                    self._daemon_info_lock.acquire()
-                                    self._daemon_info["jobs"].append({
-                                        "project": copy.copy(self.projects[idx]),
-                                        "dc_file": dc_file[:],
-                                        "commit": project["vcs_lastrev"],
-                                        "status": 0,
-                                        "container_id": "",
-                                        "time_started": 0
-                                    })
+                                yield from websocket.close()
+                                return
 
-                                    self._daemon_info["scheduled_builds"] += 1
-                                    self._daemon_info_lock.release()
+                            # check token
+                            if not data["token"] in self._auth.tokens:
+                                yield from websocket.send(json.dumps({
+                                    "id": 2,
+                                    "error": "You are not authorized to trigger a build!"
+                                }))
 
-                                    valid_dcs.append(dc_file)
-                                    break
+                            # find projects for dc files and trigger builds
+                            valid_dcs = []
 
-                        # find projects and trigger builds
-                        valid_projects = []
-
-                        for requested_project in set(data["projects"]):
-                            for idx in self.projects:
-                                project = self.projects[idx]
-                                if requested_project == project["project"]:
-                                    for dc_file in project["dc_files"]:
+                            for dc_file in set(data["dc_files"]):
+                                for idx in self.projects:
+                                    project = self.projects[idx]
+                                    if dc_file in project["dc_files"]:
                                         self._daemon_info_lock.acquire()
                                         self._daemon_info["jobs"].append({
-                                            "project": copy.copy(project),
-                                            "dc_file": dc_file,
+                                            "project": copy.copy(self.projects[idx]),
+                                            "dc_file": dc_file[:],
                                             "commit": project["vcs_lastrev"],
                                             "status": 0,
                                             "container_id": "",
@@ -261,36 +238,62 @@ class Daemon(Action):
                                         self._daemon_info["scheduled_builds"] += 1
                                         self._daemon_info_lock.release()
 
-                                    valid_projects.append(project["project"])
-                                    break
+                                        valid_dcs.append(dc_file)
+                                        break
 
-                        # send answer
-                        yield from websocket.send(json.dumps({
-                            "id": 2,
-                            "dc_files": valid_dcs,
-                            "projects": valid_projects
-                        }))
-                    # project list
-                    if data["id"] == 3:
-                        projects = OrderedDict()
+                            # find projects and trigger builds
+                            valid_projects = []
 
-                        for idx in self.projects:
-                            project = self.projects[idx]
-                            projects[project["project"]] = list(project["dc_files"].keys())
+                            for requested_project in set(data["projects"]):
+                                for idx in self.projects:
+                                    project = self.projects[idx]
+                                    if requested_project == project["project"]:
+                                        for dc_file in project["dc_files"]:
+                                            self._daemon_info_lock.acquire()
+                                            self._daemon_info["jobs"].append({
+                                                "project": copy.copy(project),
+                                                "dc_file": dc_file,
+                                                "commit": project["vcs_lastrev"],
+                                                "status": 0,
+                                                "container_id": "",
+                                                "time_started": 0
+                                            })
 
-                        # answer
-                        yield from websocket.send(json.dumps(
-                            {
-                                "id": data["id"],
-                                "projects": projects
-                            }
-                        ))
-                    else:
-                        # close if an invalid packet was received
-                        yield from websocket.close()
-                        return
-            except ValueError:
-                yield from websocket.close()
+                                            self._daemon_info["scheduled_builds"] += 1
+                                            self._daemon_info_lock.release()
+
+                                        valid_projects.append(project["project"])
+                                        break
+
+                            # send answer
+                            yield from websocket.send(json.dumps({
+                                "id": 2,
+                                "dc_files": valid_dcs,
+                                "projects": valid_projects
+                            }))
+                        # project list
+                        if data["id"] == 3:
+                            projects = OrderedDict()
+
+                            for idx in self.projects:
+                                project = self.projects[idx]
+                                projects[project["project"]] = list(project["dc_files"].keys())
+
+                            # answer
+                            yield from websocket.send(json.dumps(
+                                {
+                                    "id": data["id"],
+                                    "projects": projects
+                                }
+                            ))
+                        else:
+                            # close if an invalid packet was received
+                            yield from websocket.close()
+                            return
+                except ValueError:
+                    yield from websocket.close()
+                    return
+            except ConnectionResetError:
                 return
 
     def _api_server_thread(self):
