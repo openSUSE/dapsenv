@@ -324,7 +324,9 @@ class Daemon(Action):
         """Starts the HTTP log server
         """
 
-        self._logserver_httpd = HTTPServer((self._logserver_ip, self._logserver_port), LogServer)
+        self._logserver_httpd = HTTPServer(
+            (self._logserver_ip, int(self._logserver_port)), LogServer
+        )
         self._logserver_httpd.serve_forever()
 
     def start(self):
