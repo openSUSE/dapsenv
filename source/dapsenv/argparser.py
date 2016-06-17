@@ -108,9 +108,9 @@ class ArgParser:
         if not logmanager_ip:
             default_ip = "127.0.0.1"
 
-        logmanager_port = 5556
+        logserver_port = 5556
         try:
-            logmanager_port = int(configmanager.get_prop("logmanager_port"))
+            logserver_port = int(configmanager.get_prop("logserver_port"))
         except ValueError:
             pass
 
@@ -135,7 +135,7 @@ class ArgParser:
         )
 
         cmd.add_argument(
-            "--logserver-port", action="store", default=logmanager_port, help="The IP address the log " \
+            "--logserver-port", action="store", default=logserver_port, help="The IP address the log " \
             "server should listen to."
         )
 
