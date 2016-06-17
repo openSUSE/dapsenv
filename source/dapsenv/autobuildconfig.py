@@ -33,7 +33,7 @@ class AutoBuildConfig:
         :param string path: The path to the auto build config file
         """
 
-        self._dcfiles_pattern = re.compile("DC\-[a-zA-Z\-_]+")
+        self._dcfiles_pattern = re.compile("DC\-[a-zA-Z0-9\-_]+")
 
         self._path = path
         self._write_lock = threading.Lock()
