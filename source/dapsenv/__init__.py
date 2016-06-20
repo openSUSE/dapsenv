@@ -93,7 +93,9 @@ def execute(args):
         "token-authorize": "tokenauthorize",
         "ta": "tokenauthorize",
         "token-deauthorize": "tokendeauthorize",
-        "td": "tokendeauthorize"
+        "td": "tokendeauthorize",
+        "view-log": "viewlog",
+        "vl": "viewlog"
     }
 
     action = command[args["action"]]

@@ -37,10 +37,11 @@ class ArgParser:
         self.addDaemonCommand()
         self.addStatusCommand()
         self.addTriggerBuildCommand()
-        self.addProjectListComamnd()
+        self.addProjectListCommand()
         self.addTokenCommand()
         self.addTokenAuthorizeCommand()
         self.addTokenDeauthorizeCommand()
+        self.addViewLogCommand()
 
     def print_help(self):
         self.parser.print_help()
@@ -213,7 +214,7 @@ class ArgParser:
             help="Schedules builds for the given DC-Files."
         )
 
-    def addProjectListComamnd(self):
+    def addProjectListCommand(self):
         default_ip = configmanager.get_prop("api_client_default_ip")
         if not default_ip:
             default_ip = "127.0.0.1"
@@ -269,4 +270,39 @@ class ArgParser:
         cmd.add_argument(
             "tokens", nargs="+", metavar="TOKENS", help="A list (separated by spaces) of tokens " \
             "to deauthorize."
+        )
+
+    def addViewLogCommand(self):
+        default_ip = configmanager.get_prop("api_client_default_ip")
+        if not default_ip:
+            default_ip = "127.0.0.1"
+
+        default_port = 5555
+        try:
+            default_port = int(configmanager.get_prop("api_client_default_port"))
+        except ValueError:
+            pass
+
+        cmd = self.cmdSubParser.add_parser(
+            "view-log", aliases=["vl"], help="Shows the log result of a failed build."
+        )
+
+        cmd.add_argument(
+            "--ip", "-i", action="store", default=default_ip,
+            help="Sets the IP of the API server."
+        )
+
+        cmd.add_argument(
+            "--port", "-p", action="store", default=default_port,
+            help="Sets the port of the API server."
+        )
+
+        cmd.add_argument(
+            "--format", "-f", action="store", required=True,
+            choices=["html", "single_html", "pdf"], help="Format of the documentation."
+        )
+
+        cmd.add_argument(
+            "DC-FILE", nargs=1, action="store",
+            help="Name of the DC-File."
         )

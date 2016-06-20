@@ -25,6 +25,8 @@ from dapsenv.exceptions import AutoBuildConfigSyntaxErrorException, AutoBuildCon
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
+_dcfiles_pattern = re.compile("DC\-[a-zA-Z0-9\-_]+")
+
 class AutoBuildConfig:
 
     def __init__(self, path):
@@ -32,8 +34,6 @@ class AutoBuildConfig:
 
         :param string path: The path to the auto build config file
         """
-
-        self._dcfiles_pattern = re.compile("DC\-[a-zA-Z0-9\-_]+")
 
         self._path = path
         self._write_lock = threading.Lock()
@@ -121,7 +121,7 @@ class AutoBuildConfig:
         :return OrderedDict: A dict with all dc_files
         """
 
-        dcs = self._dcfiles_pattern.findall(dc_files)
+        dcs = _dcfiles_pattern.findall(dc_files)
         dc_files = OrderedDict()
 
         for dc in dcs:

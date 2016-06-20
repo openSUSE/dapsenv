@@ -24,13 +24,15 @@ import grp
 import json
 import os
 import pwd
+import re
 import sys
 import threading
 import time
 import websockets
+from base64 import b64encode
 from collections import OrderedDict
 from dapsenv.actions.action import Action
-from dapsenv.autobuildconfig import AutoBuildConfig
+from dapsenv.autobuildconfig import AutoBuildConfig, _dcfiles_pattern
 from dapsenv.daemonauth import DaemonAuth
 from dapsenv.docker import Container
 from dapsenv.dockerregistry import is_image_imported
@@ -286,6 +288,65 @@ class Daemon(Action):
                                     "projects": projects
                                 }
                             ))
+                        # view log
+                        if data["id"] == 4:
+                            if not "dc_file" in data or not "format" in data:
+                                yield from websocket.close()
+                                return
+
+                            dc_file = data["dc_file"]
+                            format_name = data["format"]
+
+                            if not _dcfiles_pattern.match(dc_file):
+                                yield from websocket.send(json.dumps({
+                                    "id": 4,
+                                    "error": "The DC-File name is not valid!"
+                                }))
+
+                                yield from websocket.close()
+                                return
+
+                            if format_name != "html" and format_name != "single_html" \
+                                and format_name != "pdf":
+                                yield from websocket.send(json.dumps({
+                                    "id": 4,
+                                    "error": "Format is not valid. Please choose between: html, " \
+                                             "single_html, and pdf"
+                                }))
+
+                                yield from websocket.close()
+                                return
+
+                            pattern = re.compile("^build\_fail\_([a-zA-Z0-9\-]+)\_{}\_([0-9]+)\.log$".format(
+                                format_name
+                            ))
+
+                            results = []
+                            files = os.listdir(LOG_DIR)
+                            for file_name in files:
+                                match = pattern.match(file_name)
+                                if match:
+                                    res = match.groups()
+                                    if res[0] == dc_file:
+                                        results.append(res[1])
+
+                            if not results:
+                                yield from websocket.send(json.dumps({
+                                    "id": 4,
+                                    "error": "No log entries found for this DC-File and Format!"
+                                }))
+                            else:
+                                results.sort()
+                                print(results)
+
+                                content = ""
+                                with open("{}/build_fail_{}_{}_{}.log".format(LOG_DIR, dc_file, format_name, results[0]), "r") as log_file:
+                                    content = log_file.read()
+
+                                yield from websocket.send(json.dumps({
+                                    "id": 4,
+                                    "log": b64encode(content.encode("ascii")).decode("ascii")
+                                }))
                         else:
                             # close if an invalid packet was received
                             yield from websocket.close()
