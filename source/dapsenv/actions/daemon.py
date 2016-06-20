@@ -337,7 +337,6 @@ class Daemon(Action):
                                 }))
                             else:
                                 results.sort()
-                                print(results)
 
                                 content = ""
                                 with open("{}/build_fail_{}_{}_{}.log".format(LOG_DIR, dc_file, format_name, results[0]), "r") as log_file:
