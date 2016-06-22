@@ -16,7 +16,6 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
-import asyncio
 import copy
 import dapsenv.configmanager as configmanager
 import dapsenv.xslt as xslt
@@ -28,10 +27,10 @@ import re
 import sys
 import threading
 import time
-import websockets
 from base64 import b64encode
 from collections import OrderedDict
 from dapsenv.actions.action import Action
+from dapsenv.apiserver import APIServer
 from dapsenv.autobuildconfig import AutoBuildConfig, _dcfiles_pattern
 from dapsenv.daemonauth import DaemonAuth
 from dapsenv.docker import Container
@@ -69,7 +68,9 @@ class Daemon(Action):
         self._start_ircbot()
 
         # start api server
-        self._api_server_start()
+        if self._api_server == "true":
+            api = APIServer("0.0.0.0", self._api_server_port, self)
+            api.serve()
 
         # start log server if wanted
         if self._logserver:
@@ -156,232 +157,6 @@ class Daemon(Action):
 
         self._ircbot.setDaemon(self)
         self._ircbot.start()
-
-    @asyncio.coroutine
-    def _api_server_runtime(self, websocket, path):
-        """This coroutine will be created for each new client what connects to the API server
-
-        :param websockets.server.WebSocketServerProtocol websocket: Object for communicating with
-                                                                    the current client
-        :param string path: The path where the client want to go to
-        """
-
-        while True:
-            try:
-                # wait until the client sends data to the API server
-                try:
-                    data = yield from websocket.recv()
-                except websockets.exceptions.ConnectionClosed:
-                    return
-
-                try:
-                    # parse the sent data as json
-                    data = json.loads(data)
-
-                    # check for correct data packets
-                    if not "id" in data:
-                        yield from websocket.close()
-                        return
-                    else:
-                        # accessing thread-safe daemon information
-                        self._daemon_info_lock.acquire()
-                        running_builds = copy.copy(self._daemon_info["running_builds"])
-                        scheduled_builds = copy.copy(self._daemon_info["scheduled_builds"])
-                        self._daemon_info_lock.release()
-
-                        # receive daemon status
-                        if data["id"] == 1:
-                            # answer
-                            yield from websocket.send(json.dumps(
-                                {
-                                    "id": data["id"],
-                                    "running_builds": running_builds,
-                                    "scheduled_builds": scheduled_builds,
-                                    "jobs": self.getJobList()
-                                }
-                            ))
-                        # trigger build request
-                        elif data["id"] == 2:
-                            # check for correct data packages
-                            if not "dc_files" in data or not "projects" in data or not "token" in data:
-                                yield from websocket.close()
-                                return
-
-                            if type(data["dc_files"]) != type(list()) or \
-                                type(data["projects"]) != type(list()):
-
-                                yield from websocket.close()
-                                return
-
-                            # check token
-                            if not data["token"] in self._auth.tokens:
-                                yield from websocket.send(json.dumps({
-                                    "id": 2,
-                                    "error": "You are not authorized to trigger a build!"
-                                }))
-
-                            # find projects for dc files and trigger builds
-                            valid_dcs = []
-
-                            for dc_file in set(data["dc_files"]):
-                                for idx in self.projects:
-                                    project = self.projects[idx]
-                                    if dc_file in project["dc_files"]:
-                                        self._daemon_info_lock.acquire()
-                                        self._daemon_info["jobs"].append({
-                                            "project": copy.copy(self.projects[idx]),
-                                            "dc_file": dc_file[:],
-                                            "commit": project["vcs_lastrev"],
-                                            "status": 0,
-                                            "container_id": "",
-                                            "time_started": 0
-                                        })
-
-                                        self._daemon_info["scheduled_builds"] += 1
-                                        self._daemon_info_lock.release()
-
-                                        valid_dcs.append(dc_file)
-                                        break
-
-                            # find projects and trigger builds
-                            valid_projects = []
-
-                            for requested_project in set(data["projects"]):
-                                for idx in self.projects:
-                                    project = self.projects[idx]
-                                    if requested_project == project["project"]:
-                                        for dc_file in project["dc_files"]:
-                                            self._daemon_info_lock.acquire()
-                                            self._daemon_info["jobs"].append({
-                                                "project": copy.copy(project),
-                                                "dc_file": dc_file,
-                                                "commit": project["vcs_lastrev"],
-                                                "status": 0,
-                                                "container_id": "",
-                                                "time_started": 0
-                                            })
-
-                                            self._daemon_info["scheduled_builds"] += 1
-                                            self._daemon_info_lock.release()
-
-                                        valid_projects.append(project["project"])
-                                        break
-
-                            # send answer
-                            yield from websocket.send(json.dumps({
-                                "id": 2,
-                                "dc_files": valid_dcs,
-                                "projects": valid_projects
-                            }))
-                        # project list
-                        if data["id"] == 3:
-                            projects = OrderedDict()
-
-                            for idx in self.projects:
-                                project = self.projects[idx]
-                                projects[project["project"]] = list(project["dc_files"].keys())
-
-                            # answer
-                            yield from websocket.send(json.dumps(
-                                {
-                                    "id": data["id"],
-                                    "projects": projects
-                                }
-                            ))
-                        # view log
-                        if data["id"] == 4:
-                            if not "dc_file" in data or not "format" in data:
-                                yield from websocket.close()
-                                return
-
-                            dc_file = data["dc_file"]
-                            format_name = data["format"]
-
-                            if not _dcfiles_pattern.match(dc_file):
-                                yield from websocket.send(json.dumps({
-                                    "id": 4,
-                                    "error": "The DC-File name is not valid!"
-                                }))
-
-                                yield from websocket.close()
-                                return
-
-                            if format_name != "html" and format_name != "single_html" \
-                                and format_name != "pdf":
-                                yield from websocket.send(json.dumps({
-                                    "id": 4,
-                                    "error": "Format is not valid. Please choose between: html, " \
-                                             "single_html, and pdf"
-                                }))
-
-                                yield from websocket.close()
-                                return
-
-                            pattern = re.compile("^build\_fail\_([a-zA-Z0-9\-]+)\_{}\_([0-9]+)\.log$".format(
-                                format_name
-                            ))
-
-                            results = []
-                            files = os.listdir(LOG_DIR)
-                            for file_name in files:
-                                match = pattern.match(file_name)
-                                if match:
-                                    res = match.groups()
-                                    if res[0] == dc_file:
-                                        results.append(res[1])
-
-                            if not results:
-                                yield from websocket.send(json.dumps({
-                                    "id": 4,
-                                    "error": "No log entries found for this DC-File and Format!"
-                                }))
-                            else:
-                                results.sort()
-
-                                content = ""
-                                with open("{}/build_fail_{}_{}_{}.log".format(LOG_DIR, dc_file, format_name, results[0]), "r") as log_file:
-                                    content = log_file.read()
-
-                                yield from websocket.send(json.dumps({
-                                    "id": 4,
-                                    "log": b64encode(content.encode("ascii")).decode("ascii")
-                                }))
-                        else:
-                            # close if an invalid packet was received
-                            yield from websocket.close()
-                            return
-                except ValueError:
-                    yield from websocket.close()
-                    return
-            except ConnectionResetError:
-                return
-
-    def _api_server_thread(self):
-        """Spawns the API server
-        """
-
-        # set event loop handler
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        # configure websocket server
-        start_server = websockets.serve(self._api_server_runtime, "0.0.0.0", self._api_server_port)
-
-        # event loop settings
-        asyncio.get_event_loop().run_until_complete(start_server)
-        asyncio.get_event_loop().run_forever()
-
-    def _api_server_start(self):
-        """Starts an API server in a new thread if configured
-        """
-
-        if self._api_server == "true":
-            # spawn API server thread
-            thread = threading.Thread(target=self._api_server_thread)
-            thread.start()
-        elif not self._api_server == "false":
-            log.warn("Invalid option specified for 'api_server' in config file! Valid options: " \
-                "true/false")
 
     def _start_logserver(self):
         """Starts the HTTP log server
@@ -536,6 +311,11 @@ class Daemon(Action):
         :param string dc_file: DC what should get built
         """
 
+        # forbid building of documentations in development mode
+        if self._args["development"]:
+            while True:
+                time.sleep(30)
+
         # create container
         container = Container()
         container.spawn()
@@ -681,6 +461,71 @@ class Daemon(Action):
         if not self._noout:
             print(message)
 
+    def scheduleProjectBuilds(self, projects):
+        """Schedules one or more projects for building
+
+        :param list projects: A list of project names to build
+        :return list: A list of all successfully triggered project builds
+        """
+
+        self._daemon_info_lock.acquire()
+
+        valid_projects = []
+
+        for requested_project in set(projects):
+            for idx in self.projects:
+                project = self.projects[idx]
+                if requested_project == project["project"]:
+                    for dc_file in project["dc_files"]:
+                        self._daemon_info["jobs"].append({
+                            "project": copy.copy(project),
+                            "dc_file": dc_file,
+                            "commit": project["vcs_lastrev"],
+                            "status": 0,
+                            "container_id": "",
+                            "time_started": 0
+                        })
+
+                        self._daemon_info["scheduled_builds"] += 1
+
+                    valid_projects.append(project["project"])
+                    break
+
+        self._daemon_info_lock.release()
+
+        return valid_projects
+
+    def scheduleDCFileBuilds(self, dc_files):
+        """Schedules one or more DC files for building
+
+        :param list dc_files: A list of DC file names to build
+        :return list: A list of all successfully triggered DC file builds
+        """
+
+        valid_dcs = []
+
+        for dc_file in set(dc_files):
+            for idx in self.projects:
+                project = self.projects[idx]
+                if dc_file in project["dc_files"]:
+                    self._daemon_info_lock.acquire()
+                    self._daemon_info["jobs"].append({
+                        "project": copy.copy(self.projects[idx]),
+                        "dc_file": dc_file[:],
+                        "commit": project["vcs_lastrev"],
+                        "status": 0,
+                        "container_id": "",
+                        "time_started": 0
+                    })
+
+                    self._daemon_info["scheduled_builds"] += 1
+                    self._daemon_info_lock.release()
+
+                    valid_dcs.append(dc_file)
+                    break
+
+        return valid_dcs
+
     def getJobList(self):
         result = []
 
@@ -698,6 +543,19 @@ class Daemon(Action):
         self._daemon_info_lock.release()
 
         return result
+
+    def getProjectNames(self):
+        projects = OrderedDict()
+
+        for idx in self.projects:
+            project = self.projects[idx]
+            projects[project["project"]] = list(project["dc_files"].keys())
+
+        return projects
+
+    @property
+    def auth(self):
+        return self._auth
 
     def loadAutoBuildConfig(self, path):
         """Loads the auto build config file into memory and parses it

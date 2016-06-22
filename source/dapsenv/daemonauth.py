@@ -16,6 +16,8 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
+import threading
+from copy import copy
 from dapsenv.exceptions import AuthFileNotInitializedException, AuthFileParseException, \
                                InvalidTokenLengthException, InvalidTokenCharsException, \
                                TokenAlreadyAuthorizedException, TokenNotAuthorizedException
@@ -34,6 +36,7 @@ class DaemonAuth:
         self._tree = None
         self._tokens_element = None
         self._tokens = []
+        self._tokens_lock = threading.Lock()
 
         self.parse()
 
@@ -52,7 +55,10 @@ class DaemonAuth:
         if not TOKEN_PATTERN.match(token):
             raise InvalidTokenCharsException(token)
 
+        self._tokens_lock.acquire()
+
         if token in self._tokens:
+            self._tokens_lock.release()
             raise TokenAlreadyAuthorizedException(token)
 
         token_elem = etree.Element("token", { "token": token })
@@ -60,6 +66,7 @@ class DaemonAuth:
         self._save()
 
         self._tokens.append(token)
+        self._tokens_lock.release()
 
     def deauthorize(self, token):
         """Deauthorize token from issuing Daemon commands
@@ -70,7 +77,10 @@ class DaemonAuth:
         if not self._tree:
             raise AuthFileNotInitializedException(self._file_name)
 
+        self._tokens_lock.acquire()
+
         if token not in self._tokens:
+            self._tokens_lock.release()
             raise TokenNotAuthorizedException(token)
 
         element = self._tree.xpath("//tokens/token[@token='{}']".format(token))[0]
@@ -78,6 +88,7 @@ class DaemonAuth:
         self._save()
 
         self._tokens.remove(token)
+        self._tokens_lock.release()
 
     def _save(self):
         """Saves the current state of the XML tee
@@ -117,4 +128,8 @@ class DaemonAuth:
 
     @property
     def tokens(self):
-        return self._tokens
+        self._tokens_lock.acquire()
+        tokens = copy(self._tokens)
+        self._tokens_lock.release()
+
+        return tokens

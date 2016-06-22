@@ -154,6 +154,12 @@ class ArgParser:
             "autobuild config file. This overrides the value in configuration files."
         )
 
+        cmd.add_argument(
+            "--development", action="store_true", help="Not relevant for the normal user and " \
+            "should only be used by developers. This option forbids to start docker containers. " \
+            "This is useful during development."
+        )
+
     def addStatusCommand(self):
         default_ip = configmanager.get_prop("api_client_default_ip")
         if not default_ip:

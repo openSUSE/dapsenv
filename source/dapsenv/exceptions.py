@@ -239,3 +239,13 @@ class TokenNotAuthorizedException(DapsEnvException):
 
     def __str__(self):
         return self.message
+
+class APIInvalidRequestException(DapsEnvException):
+    pass
+
+class APIUnauthorizedTokenException(DapsEnvException):
+    pass
+
+class APIErrorException(DapsEnvException):
+    def __init__(self, message):
+        self.message = message
