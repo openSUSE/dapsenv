@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refsect2 PUBLIC
+"-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.docbook.org/xml/4.5/docbookx.dtd"
+[
+<!ENTITY % entities SYSTEM "entity-decl.ent">
+%entities;
+]>
+
+  <refsect2>
+   <title><command>view-log</command> [-h] [--ip IP] [--port PORT] --format
+                        {html,single_html,pdf}
+                        DC-FILE</title>
+   <para>
+    Shows the output of 'daps' for a failed build.
+   </para>
+   <variablelist>
+    <varlistentry>
+     <term><option>--ip</option></term>
+     <listitem>
+      <para>
+       The IP address of the Daemon API server. Default: 127.0.0.1
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--port</option></term>
+     <listitem>
+      <para>
+       The port of the Daemon API server. Default: 5555
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>--format</option></term>
+     <listitem>
+      <para>
+       The format of the build. Can bei either html, single_html, or pdf
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><option>DC-FILE</option></term>
+     <listitem>
+      <para>
+       The name of the DC-File.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </refsect2>
