@@ -66,10 +66,6 @@ class AutoBuildConfig:
 
             data[index] = {}
             data[index]["project"] = project_name
-            data[index]["dc_files"] = self._parse_dc_files(
-                vcs_data.find("checkout").text,
-                dc_files
-            )
             data[index]["vcs"] = vcs_data.attrib["type"]
             data[index]["vcs_branch"] = vcs_data.attrib["branch"]
             data[index]["vcs_type"] = vcs_data.attrib["type"]
@@ -83,6 +79,12 @@ class AutoBuildConfig:
             data[index]["notifications"] = {}
             data[index]["notifications"]["emails"] = []
             data[index]["notifications"]["irc"] = []
+            data[index]["dc_files"] = self._parse_dc_files(
+                vcs_data.find("checkout").text,
+                dc_files,
+                data[index]["repo"],
+                data[index]["vcs_branch"]
+            )
 
             notification_elem = project.find("notifications")
 
@@ -113,11 +115,13 @@ class AutoBuildConfig:
 
         self._write_lock.release()
 
-    def _parse_dc_files(self, repo_dir, dc_files):
+    def _parse_dc_files(self, repo_dir, dc_files, repo, branch):
         """Remove all trash characters from the 'dcfiles' element
 
         :param string repo_dir: path to the Repository
         :param string dc_files: the content of the <dcfiles/> element
+        :param Git.Repository repo: The repository object
+        :param string branch: The branch for the documentation
         :return OrderedDict: A dict with all dc_files
         """
 
@@ -125,6 +129,15 @@ class AutoBuildConfig:
         dc_files = OrderedDict()
 
         for dc in dcs:
+            # switch to given branch
+            currbranch = repo.branch()
+            if currbranch != branch:
+                repo.checkout(branch)
+
             dc_files[dc] = DCFile("{}/{}".format(repo_dir, dc))
+
+            # switch back to other branch
+            if currbranch != branch:
+                repo.checkout(currbranch)
 
         return dc_files

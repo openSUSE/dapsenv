@@ -63,6 +63,9 @@ def create_files():
     if not os.path.exists(TMP_DIR):
         os.makedirs(TMP_DIR)
 
+    if not os.path.exists(BUILDS_DIR):
+        os.makedirs(BUILDS_DIR)
+
     # files
     if not os.path.exists(CLIENT_TOKEN_PATH):
         with open(CLIENT_TOKEN_PATH, "w") as token_file:
