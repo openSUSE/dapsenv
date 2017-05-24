@@ -104,14 +104,18 @@ def execute(args):
         "vl": "viewlog"
     }
 
-    action = command[args["action"]]
+    try:
+        action = args["action"]
+        result = command[action]
+    except KeyError:
+        raise InvalidActionException(action)
 
     try:
-        class_name = action.title()
+        class_name = result.title()
         module = import_module("dapsenv.actions.{}".format(action))
 
         # initialize class
         instance = getattr(module, class_name)()
         instance.execute(args)
     except ImportError:
-        raise InvalidActionException(action)
+        raise InvalidActionException(result)
