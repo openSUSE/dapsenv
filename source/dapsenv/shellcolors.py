@@ -18,7 +18,6 @@
 
 from functools import wraps
 
-
 def shellcolor(func):
     """Decorator for shell color functions
     :param func: Function to decorate
@@ -29,7 +28,6 @@ def shellcolor(func):
         return "\033[01;{0}\033[00m".format(func(text))
     return wrapped
 
-
 @shellcolor
 def green(text):
     """Create green text string
@@ -38,7 +36,6 @@ def green(text):
     """
     return "32m{0}".format(text)
 
-
 @shellcolor
 def red(text):
     """Create red text string
@@ -46,7 +43,6 @@ def red(text):
     :return: a red string
     """
     return "31m{0}".format(text)
-
 
 @shellcolor
 def yellow(text):

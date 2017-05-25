@@ -20,7 +20,6 @@ import shlex
 import subprocess
 from dapsenv.exceptions import DockerRegisteryException
 
-
 def is_image_imported(imagename):
     with open("/dev/null", "r") as devnull:
         process = subprocess.Popen(

@@ -18,13 +18,12 @@
 
 from dapsenv.exceptions import APIInvalidRequestException, APIUnauthorizedTokenException
 
-
 def handle(data, daemon):
     # check for correct data packages
-    if "dc_files" not in data or "projects" not in data or "token" not in data:
+    if not "dc_files" in data or not "projects" in data or not "token" in data:
         raise APIInvalidRequestException()
 
-    if not isinstance(data["dc_files"], list) or not isinstance(data["projects"], list):
+    if type(data["dc_files"]) != type(list()) or type(data["projects"]) != type(list()):
         raise APIInvalidRequestException()
 
     # check token

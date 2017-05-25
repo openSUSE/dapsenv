@@ -21,13 +21,12 @@ import stat
 import sys
 from dapsenv.argparser import ArgParser
 from dapsenv.exceptions import InvalidCommandLineException, InvalidActionException
-from dapsenv.general import (HOME_DIR, LOG_DIR, TMP_DIR, BUILDS_DIR, TEMPLATE_PATH,
-                             DAEMON_AUTH_PATH, CLIENT_TOKEN_PATH, TOKEN_LENGTH)
+from dapsenv.general import HOME_DIR, LOG_DIR, TMP_DIR, BUILDS_DIR, TEMPLATE_PATH, \
+                            DAEMON_AUTH_PATH, CLIENT_TOKEN_PATH, TOKEN_LENGTH
 from dapsenv.logmanager import set_log_level
 from dapsenv.utils import randomString
 from importlib import import_module
 from shutil import copyfile
-
 
 def main(args=None):
     create_files()
@@ -49,7 +48,6 @@ def main(args=None):
 
     # execute
     execute(parsed_args)
-
 
 def create_files():
     """Creates all necessary files and directories
@@ -79,7 +77,6 @@ def create_files():
         copyfile("{}/daemon-auth.xml".format(TEMPLATE_PATH), DAEMON_AUTH_PATH)
         os.chmod(DAEMON_AUTH_PATH, stat.S_IREAD | stat.S_IWRITE)
 
-
 def execute(args):
     # for the passed action/sub-command it's required to find the appropriate "Action Class". Each
     # sub-command has its own action class
@@ -104,18 +101,14 @@ def execute(args):
         "vl": "viewlog"
     }
 
-    try:
-        action = args["action"]
-        result = command[action]
-    except KeyError:
-        raise InvalidActionException(action)
+    action = command[args["action"]]
 
     try:
-        class_name = result.title()
+        class_name = action.title()
         module = import_module("dapsenv.actions.{}".format(action))
 
         # initialize class
         instance = getattr(module, class_name)()
         instance.execute(args)
     except ImportError:
-        raise InvalidActionException(result)
+        raise InvalidActionException(action)

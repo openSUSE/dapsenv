@@ -1,6 +1,6 @@
 from dapsenv.actions.config import Config
 from dapsenv.exitcodes import E_CONFIG_PROP_NOT_FOUND
-from unittest.mock import patch
+from mock import patch
 
 general_args = {'global': True, 'property': 'test', 'action': 'config', 'user': False,
                 'value': None, 'path': '', 'own': False, 'generate': False, 'force': False}
