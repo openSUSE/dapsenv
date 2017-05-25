@@ -1,7 +1,30 @@
 graft man
 prune man/build
+prune .env
+prune .cache
+prune .eggs
+
+# graft docs
+graft source
+graft tests
+
 
 include source/dapsenv/templates/*
 include source/dapsenv/data/*
+include AUTHORS.rst
+include CHANGELOG.rst
+include CONTRIBUTING.rst
+include LICENSE
+include README.*
+include devel_requirements.txt
+include requirements.txt
+include setup.py
+include setup.cfg
 
-global-exclude *.py[cod] __pycache__ *.so *.dylib
+exclude .codeclimate.yml
+exclude .travis.yml
+exclude coverage.xml
+
+
+
+global-exclude *.py[cod] __pycache__ *.so *.dylib *~ *.bak

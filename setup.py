@@ -16,26 +16,24 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 
-here = path.abspath(path.dirname(__file__))
+def requires(filename):
+    """Returns a list of all pip requirements
 
-class PyTest(TestCommand):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+    :param filename: the Pip requirement file (usually 'requirements.txt')
+    :return: list of modules
+    :rtype: list
+    """
+    modules = []
+    with open(filename, 'r') as pipreq:
+        for line in pipreq:
+            line = line.strip()
+            if line.startswith('#') or not line:
+                continue
+            modules.append(line)
+    return modules
 
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.pytest_args = []
 
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
-        import pytest
-        errno = pytest.main(self.pytest_args)
-        sys.exit(errno)
-
+# --------------------------------------------------
 setupdict = dict(
     name='dapsenv',
 
@@ -63,7 +61,7 @@ setupdict = dict(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta',
 
         # Indicate who your project is intended for
         'Topic :: Documentation',
@@ -76,27 +74,28 @@ setupdict = dict(
 
         # Supported Python versions
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
     # What does your project relate to?
-    keywords='DAPS Build Environment',
+    keywords=['daps', 'build', 'XML'],
 
     # Includes data files from MANIFEST.in
     #
     # See also:
     # http://stackoverflow.com/a/16576850
     # https://pythonhosted.org/setuptools/setuptools.html#including-data-files
-    include_package_data = True,
+    include_package_data=True,
 
-    install_requires=[
-        'websockets>=3.1', 'lxml>= 3.3.5',
-        'irc',
-    ],
+    install_requires=requires('requirements.txt'),
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     packages=find_packages('source'),
     package_dir={'': 'source'},
+    # include_package_data=True,
+    # zip_safe=False,
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
@@ -109,8 +108,7 @@ setupdict = dict(
     # for example:
     # $ pip install -e .[dev,test]
     #extras_require={
-    #    'dev': ['check-manifest'],
-    #    'test': ['coverage'],
+    #    'dev': requires('devel_requirements.txt'),
     #},
 
     # If there are data files included in your packages that need to be
@@ -136,10 +134,8 @@ setupdict = dict(
     },
 
     # Required packages for testing
-    tests_require=['pytest'],
-
-    #
-    cmdclass = {'test': PyTest},
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest', 'pytest-cov', 'pytest-catchlog'],
 )
 
 # Call it:
