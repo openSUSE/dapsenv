@@ -276,7 +276,7 @@ class Daemon(Action):
                             )
 
                             # is at least one element from "changed_files" in "assigned_files"
-                            res = lambda a, b: any(i in assigned_files for i in changed_files)
+                            res = any(i in assigned_files for i in changed_files)
 
                             if res:
                                 build = True
