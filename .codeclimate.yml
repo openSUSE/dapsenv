@@ -1,0 +1,37 @@
+---
+# https://codeclimate.com/
+#
+engines:
+    duplication:
+        enabled: true
+        config:
+            languages:
+            - python
+            python_version: 3
+    pep8:
+        enabled: true
+    radon:
+        enabled: true
+        config:
+            # threshold: "C"
+    fixme:
+        enabled: true
+
+ratings:
+    paths:
+        - "source/dapsenv/**"
+
+exclude_paths:
+    - build/**
+    - docs/**
+    - dist/**
+    - tests/**
+    - test/**
+    - "*.cfg"
+    - "*.in"
+    - "*.txt"
+    - "*.rst"
+    - "*.md"
+    - "ChangeLog"
+    - "LICENSE"
+    - "setup.py"

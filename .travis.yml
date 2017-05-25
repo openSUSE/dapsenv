@@ -7,4 +7,9 @@ install:
 
 script:
     - python3 setup.py install
-    - python3 setup.py test -a tests/
+    # - python3 setup.py test -a tests/
+    - py.test -v
+
+addons:
+    code_climate:
+        repo_token: $CODECLIMATE_REPO_TOKEN
