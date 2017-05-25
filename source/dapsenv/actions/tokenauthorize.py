@@ -20,11 +20,10 @@ import dapsenv.token as token
 import sys
 from dapsenv.actions.action import Action
 from dapsenv.daemonauth import DaemonAuth
-from dapsenv.exceptions import (InvalidTokenLengthException, InvalidTokenCharsException,
-                                TokenAlreadyAuthorizedException)
+from dapsenv.exceptions import InvalidTokenLengthException, InvalidTokenCharsException, \
+                               TokenAlreadyAuthorizedException
 from dapsenv.general import DAEMON_AUTH_PATH
 from dapsenv.shellcolors import red
-
 
 class Tokenauthorize(Action):
     def __init__(self):
@@ -33,6 +32,7 @@ class Tokenauthorize(Action):
     def execute(self, args):
         """@see Action.execute()
         """
+
         authfile = DaemonAuth(DAEMON_AUTH_PATH)
 
         for token in args["tokens"]:

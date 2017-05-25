@@ -22,7 +22,6 @@ import irc.schedule
 import irc.strings
 import ssl
 
-
 class IRCBot(irc.bot.SingleServerIRCBot):
 
     def __init__(self, server, port, channel, nickname, username):
@@ -81,10 +80,11 @@ class IRCBot(irc.bot.SingleServerIRCBot):
                 return
 
             status = self._daemon.getStatus()
-            c.privmsg(e.source.nick, "Running Builds: {}, "
-                                     "Scheduled Builds: {}".format(status["running_builds"],
-                                                                   status["scheduled_builds"])
-                      )
+            c.privmsg(e.source.nick, "Running Builds: {}, Scheduled Builds: {}".format(
+                    status["running_builds"],
+                    status["scheduled_builds"]
+                )
+            )
 
             active_builds = []
             for builds in status["jobs"]:

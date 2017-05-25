@@ -19,7 +19,6 @@
 import dapsenv.token as token
 from dapsenv.actions.action import Action
 
-
 class Token(Action):
     def __init__(self):
         pass
