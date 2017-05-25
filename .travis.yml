@@ -10,6 +10,16 @@ script:
     # - python3 setup.py test -a tests/
     - py.test -v
 
+after_success:
+    - coverage xml
+    - python-codacy-coverage -r coverage.xml
+
 addons:
     code_climate:
         repo_token: $CODECLIMATE_REPO_TOKEN
+
+notifications:
+    email:
+        on_success: never
+        on_failure: always
+

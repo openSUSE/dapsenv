@@ -23,15 +23,13 @@ import grp
 import json
 import os
 import pwd
-import re
 import sys
 import threading
 import time
-from base64 import b64encode
 from collections import OrderedDict
 from dapsenv.actions.action import Action
 from dapsenv.apiserver import APIServer
-from dapsenv.autobuildconfig import AutoBuildConfig, _dcfiles_pattern
+from dapsenv.autobuildconfig import AutoBuildConfig
 from dapsenv.daemonauth import DaemonAuth
 from dapsenv.docker import Container
 from dapsenv.dockerregistry import is_image_imported
@@ -69,6 +67,7 @@ class Daemon(Action):
 
         # start api server
         if self._api_server == "true":
+            # FIXME: Possible binding to all interfaces.
             api = APIServer("0.0.0.0", self._api_server_port, self)
             api.serve()
 
@@ -534,7 +533,6 @@ class Daemon(Action):
                 "status": job["status"],
                 "commit": job["commit"],
                 "time_started": job["time_started"],
-                "status": job["status"]
             })
         self._daemon_info_lock.release()
 
