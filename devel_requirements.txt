@@ -5,4 +5,7 @@
 pytest>=2.8
 coverage==4.3
 pytest-cov
+#
+# For code analysis
 codeclimate-test-reporter
+codacy-coverage
