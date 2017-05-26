@@ -1,19 +1,13 @@
 #!/usr/bin/env python3
-
 """dapsenv Setup
+
 See also:
 https://packaging.python.org/en/latest/distributing.html
 https://github.com/pypa/sampleproject
 """
 
-import sys
-from os import path, environ
-# To use a consistent encoding
-from codecs import open
-
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
 
 
 def requires(filename):
@@ -73,6 +67,7 @@ setupdict = dict(
         'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
 
         # Supported Python versions
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
