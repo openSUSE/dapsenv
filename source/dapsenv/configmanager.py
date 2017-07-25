@@ -31,14 +31,14 @@ log = logging.getLogger(__name__)
 _search_pattern = re.compile("(?!#)(?P<key>[\w\d]+)\s*=\s*(?P<value>.*)")
 
 
-def get_prop(prop, config_type="", config_path=""):
+def get_prop(prop, config_type="", config_path="", default=None):
     """Returns the value of a property - should be used from other modules only!
 
     :param string prop: The requested property
     :param string config_type: The type of the config (global, user, own)
     :param string config_path: Sets the path for a configuration file (only required if "own"
                                is set in config_type)
-    :return string: The value of the property or None
+    :return string: The value of the property or default (if no config file are found).
     """
     paths = []
 
@@ -51,7 +51,12 @@ def get_prop(prop, config_type="", config_path=""):
         if os.path.exists(user_path):
             paths.append(user_path)
 
-    return get_property_value(prop, paths)
+    for path in paths:
+        if not isfile(path):
+            log.warning("No config file found. Return default '%s' for '%s'", default, prop)
+            return default
+        else:
+            return get_property_value(prop, paths)
 
 
 def set_prop(prop, value, config_type="", config_path=""):

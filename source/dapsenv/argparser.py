@@ -108,16 +108,10 @@ class ArgParser:
         )
 
     def addDaemonCommand(self):
-        logmanager_ip = configmanager.get_prop("logmanager_ip")
-        if not logmanager_ip:
-            default_ip = "127.0.0.1"
-            log.debug("Set logmanager_ip to %r", default_ip)
+        logmanager_ip = configmanager.get_prop("logmanager_ip", default='127.0.0.1')
 
         logserver_port = 5556
-        try:
-            logserver_port = int(configmanager.get_prop("logserver_port"))
-        except ValueError:
-            pass
+        logserver_port = int(configmanager.get_prop("logserver_port", default=logserver_port))
 
         cmd = self.cmdSubParser.add_parser(
             "daemon", aliases=["d"], help="This command starts a daemon which takes care of "
@@ -165,15 +159,10 @@ class ArgParser:
         )
 
     def addStatusCommand(self):
-        default_ip = configmanager.get_prop("api_client_default_ip")
-        if not default_ip:
-            default_ip = "127.0.0.1"
+        default_ip = configmanager.get_prop("api_client_default_ip", default='127.0.0.1')
 
         default_port = 5555
-        try:
-            default_port = int(configmanager.get_prop("api_client_default_port"))
-        except ValueError:
-            pass
+        default_port = int(configmanager.get_prop("api_client_default_port", default=default_port))
 
         cmd = self.cmdSubParser.add_parser(
             "status", aliases=["s"], help="Queries a DapsEnv API server."
@@ -190,15 +179,10 @@ class ArgParser:
         )
 
     def addTriggerBuildCommand(self):
-        default_ip = configmanager.get_prop("api_client_default_ip")
-        if not default_ip:
-            default_ip = "127.0.0.1"
+        default_ip = configmanager.get_prop("api_client_default_ip", default='127.0.0.1')
 
         default_port = 5555
-        try:
-            default_port = int(configmanager.get_prop("api_client_default_port"))
-        except ValueError:
-            pass
+        default_port = int(configmanager.get_prop("api_client_default_port", default=default_port))
 
         cmd = self.cmdSubParser.add_parser(
             "trigger-build", aliases=["tb"], help="Triggers a build on a DapsEnv instance."
@@ -225,15 +209,10 @@ class ArgParser:
         )
 
     def addProjectListCommand(self):
-        default_ip = configmanager.get_prop("api_client_default_ip")
-        if not default_ip:
-            default_ip = "127.0.0.1"
+        default_ip = configmanager.get_prop("api_client_default_ip", default='127.0.0.1')
 
         default_port = 5555
-        try:
-            default_port = int(configmanager.get_prop("api_client_default_port"))
-        except ValueError:
-            pass
+        default_port = int(configmanager.get_prop("api_client_default_port", default=default_port))
 
         cmd = self.cmdSubParser.add_parser(
             "project-list", aliases=["pl"], help="Retrieves a list of all projects on a "
@@ -283,15 +262,10 @@ class ArgParser:
         )
 
     def addViewLogCommand(self):
-        default_ip = configmanager.get_prop("api_client_default_ip")
-        if not default_ip:
-            default_ip = "127.0.0.1"
+        default_ip = configmanager.get_prop("api_client_default_ip", default='127.0.0.1')
 
         default_port = 5555
-        try:
-            default_port = int(configmanager.get_prop("api_client_default_port"))
-        except ValueError:
-            pass
+        default_port = int(configmanager.get_prop("api_client_default_port", default=default_port))
 
         cmd = self.cmdSubParser.add_parser(
             "view-log", aliases=["vl"], help="Shows the log result of a failed build."
