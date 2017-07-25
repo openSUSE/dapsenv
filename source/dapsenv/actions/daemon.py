@@ -41,11 +41,12 @@ from dapsenv.exitcodes import E_INVALID_GIT_REPO, E_DOCKER_IMAGE_MISSING
 from dapsenv.general import (DAEMON_DEFAULT_INTERVAL, BUILDS_DIR, DAEMON_DEFAULT_MAX_CONTAINERS,
                              API_SERVER_DEFAULT_PORT, LOG_DIR, CONTAINER_IMAGE, DAEMON_AUTH_PATH)
 from dapsenv.ircbot import IRCBot
-from dapsenv.logmanager import log
 from dapsenv.logserver import LogServer
 from http.server import HTTPServer
 from socket import gethostname
 
+import logging
+log = logging.getLogger(__name__)
 
 class Daemon(Action):
     def __init__(self):
@@ -122,7 +123,7 @@ class Daemon(Action):
         try:
             self.projects = self.autoBuildConfig.fetchProjects()
         except GitInvalidRepoException as e:
-            log.error("Configuration error in auto build config '%s'! %s",
+            log.error("Configuration error in auto build config %r! %s",
                       self._autoBuildConfigFile, e.message)
             sys.exit(E_INVALID_GIT_REPO)
 
@@ -454,7 +455,7 @@ class Daemon(Action):
         """
 
         if not self._noout:
-            print(message)
+            log.info(message)
 
     def scheduleProjectBuilds(self, projects):
         """Schedules one or more projects for building

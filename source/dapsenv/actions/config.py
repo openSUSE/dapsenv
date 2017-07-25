@@ -23,7 +23,9 @@ from dapsenv.exceptions import (ConfigPropertyNotFoundException, InvalidCommandL
                                 ConfigFileAlreadyExistsException,
                                 ConfigFileCreationPermissionErrorException)
 from dapsenv.exitcodes import E_CONFIG_FILE_PERMISSION_DENIED, E_CONFIG_FILE_ALREADY_CREATED
-from dapsenv.logmanager import log
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class Config(Action):
@@ -83,11 +85,11 @@ class Config(Action):
         try:
             configmanager.generate_config(path, self._args["force"])
         except ConfigFileAlreadyExistsException as e:
-            log.error("There is already a file called 'dapsenv.conf' in the directory '%s'. "
+            log.error("There is already a file called 'dapsenv.conf' in the directory %r. "
                       "Use --force to overwrite that file.", e.path)
             sys.exit(E_CONFIG_FILE_ALREADY_CREATED)
         except ConfigFileCreationPermissionErrorException as e:
-            log.error("Could not create config file at '%s'. Permission denied.", e.path)
+            log.error("Could not create config file at %r. Permission denied.", e.path)
             sys.exit(E_CONFIG_FILE_PERMISSION_DENIED)
 
         print("The configuration file got successfully created at: {}".format(path))

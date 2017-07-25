@@ -24,6 +24,8 @@ from dapsenv.exceptions import TokenNotAuthorizedException
 from dapsenv.general import DAEMON_AUTH_PATH
 from dapsenv.shellcolors import red
 
+import logging
+log = logging.getLogger(__name__)
 
 class Tokendeauthorize(Action):
     def __init__(self):
@@ -38,6 +40,6 @@ class Tokendeauthorize(Action):
         for token in args["tokens"]:
             try:
                 authfile.deauthorize(token)
-                print("Successfully deauthorized token '{}'.".format(token))
+                log.info("Successfully deauthorized token '{}'.".format(token))
             except TokenNotAuthorizedException:
-                sys.stderr.write(red("Error: Token '{}' is not authorized.\n".format(token)))
+                log.error("Token '{}' is not authorized.\n".format(token))

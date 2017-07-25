@@ -24,11 +24,12 @@ from dapsenv.actions.action import Action
 from base64 import b64decode
 from dapsenv.exitcodes import (E_API_SERVER_CONN_FAILED, E_API_SERVER_CLOSED_CONNECTION,
                                E_API_SERVER_INVALID_DATA_SENT, E_INVALID_CLI)
-from dapsenv.logmanager import log
 from dapsenv.shellcolors import red
 from dapsenv.token import getToken
 from socket import gaierror
 
+import logging
+log = logging.getLogger(__name__)
 
 class Viewlog(Action):
     def __init__(self):
@@ -67,9 +68,9 @@ class Viewlog(Action):
                 res = json.loads(res)
 
                 if "error" in res:
-                    sys.stderr.write(red("Error: {}\n".format(res["error"])))
+                    log.error("{}\n".format(res["error"]))
                 else:
-                    print(b64decode(res["log"]).decode("ascii"))
+                    log.debug(b64decode(res["log"]).decode("ascii"))
             except ValueError:
                 log.error("Invalid data received from API server.")
                 self._error = E_API_SERVER_INVALID_DATA_SENT

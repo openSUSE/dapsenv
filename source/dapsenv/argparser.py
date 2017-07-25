@@ -20,6 +20,8 @@ import argparse
 import dapsenv.configmanager as configmanager
 from dapsenv.general import __version__
 
+import logging
+log = logging.getLogger(__name__)
 
 class ArgParser:
 
@@ -109,6 +111,7 @@ class ArgParser:
         logmanager_ip = configmanager.get_prop("logmanager_ip")
         if not logmanager_ip:
             default_ip = "127.0.0.1"
+            log.debug("Set logmanager_ip to %r", default_ip)
 
         logserver_port = 5556
         try:

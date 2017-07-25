@@ -24,6 +24,10 @@ from dapsenv.exceptions import (InvalidConfigTypeException, ConfigFilePermission
                                 ConfigFileCreationPermissionErrorException)
 from os.path import expanduser, isfile
 
+import logging
+
+log = logging.getLogger(__name__)
+
 _search_pattern = re.compile("(?!#)(?P<key>[\w\d]+)\s*=\s*(?P<value>.*)")
 
 
@@ -198,5 +202,6 @@ def generate_config(path, force_overwrite=False):
 
     try:
         shutil.copy("{}/templates/dapsenv.conf".format(currdir), path)
+        log.info("%r created", path)
     except PermissionError:
         raise ConfigFileCreationPermissionErrorException(path)

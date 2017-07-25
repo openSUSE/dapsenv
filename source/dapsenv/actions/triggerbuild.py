@@ -23,13 +23,14 @@ import websockets
 from dapsenv.actions.action import Action
 from dapsenv.exitcodes import (E_API_SERVER_CONN_FAILED, E_API_SERVER_CLOSED_CONNECTION,
                                E_API_SERVER_INVALID_DATA_SENT, E_INVALID_CLI)
-from dapsenv.logmanager import log
 from dapsenv.shellcolors import red
 from dapsenv.token import getToken
 from datetime import datetime
 from prettytable import PrettyTable
 from socket import gaierror
 
+import logging
+log = logging.getLogger(__name__)
 
 class Triggerbuild(Action):
     def __init__(self):
@@ -79,21 +80,19 @@ class Triggerbuild(Action):
                 res = json.loads(res)
 
                 if "error" in res:
-                    sys.stderr.write(red("Error: {}\n".format(res["error"])))
+                    log.error("Error: {}\n".format(res["error"]))
                 else:
                     for dc_file in self._dc_files:
                         if dc_file in res["dc_files"]:
-                            print("Build request scheduled for DC-File '{}'.".format(dc_file))
+                            log.info("Build request scheduled for DC-File '{}'.".format(dc_file))
                         else:
-                            sys.stderr.write(red("Error: Could not find DC-File '{}' in any "
-                                                 "projects.\n".format(dc_file)))
+                            log.error("Could not find DC-File '{}' in any projects.".format(dc_file))
 
                     for project in self._projects:
                         if project in res["projects"]:
-                            print("Build request scheduled for project '{}'.".format(project))
+                            log.info("Build request scheduled for project '{}'.".format(project))
                         else:
-                            sys.stderr.write(red("Error: Invalid project name "
-                                                 "'{}'.\n".format(project)))
+                            log.error("Invalid project name '{}'.".format(project))
 
             except ValueError:
                 log.error("Invalid data received from API server.")

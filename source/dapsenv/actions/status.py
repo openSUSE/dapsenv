@@ -23,11 +23,12 @@ import websockets
 from dapsenv.actions.action import Action
 from dapsenv.exitcodes import (E_API_SERVER_CONN_FAILED, E_API_SERVER_CLOSED_CONNECTION,
                                E_API_SERVER_INVALID_DATA_SENT)
-from dapsenv.logmanager import log
 from datetime import datetime
 from prettytable import PrettyTable
 from socket import gaierror
 
+import logging
+log = logging.getLogger(__name__)
 
 class Status(Action):
     def __init__(self):

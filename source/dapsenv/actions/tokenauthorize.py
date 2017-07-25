@@ -25,6 +25,8 @@ from dapsenv.exceptions import (InvalidTokenLengthException, InvalidTokenCharsEx
 from dapsenv.general import DAEMON_AUTH_PATH
 from dapsenv.shellcolors import red
 
+import logging
+log = logging.getLogger(__name__)
 
 class Tokenauthorize(Action):
     def __init__(self):
@@ -38,8 +40,8 @@ class Tokenauthorize(Action):
         for token in args["tokens"]:
             try:
                 authfile.authorize(token)
-                print("Successfully authorized token '{}'.".format(token))
+                log.info("Successfully authorized token '{}'.".format(token))
             except (InvalidTokenLengthException, InvalidTokenCharsException):
-                sys.stderr.write(red("Error: '{}' is not a valid token.\n".format(token)))
+                log.error("'{}' is not a valid token.\n".format(token))
             except TokenAlreadyAuthorizedException:
-                sys.stderr.write(red("Error: Token '{}' is already authorized.\n".format(token)))
+                log.error("Token '{}' is already authorized.\n".format(token))

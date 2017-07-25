@@ -16,9 +16,12 @@
 # To contact SUSE about this file by physical or electronic mail,
 # you may find current contact information at www.suse.com
 
+import os
 import random
 import string
 
+import logging
+log = logging.getLogger(__name__)
 
 def randomString(len):
     """Generates a random string
@@ -27,3 +30,14 @@ def randomString(len):
     :return string: Random string
     """
     return "".join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(len))
+
+def createdir(path):
+    """Make a new directory if it do not exist
+
+    :param string path: path to new directory
+    """
+    if not os.path.exists(path):
+        os.makedirs(path)
+        log.debug("%r created", path)
+    else:
+        log.debug("%r already exists", path)

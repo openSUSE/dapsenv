@@ -20,7 +20,8 @@ import shlex
 import subprocess
 from dapsenv.exceptions import (GitInvalidRepoException, GitInvalidBranchName,
                                 GitErrorException)
-from dapsenv.logmanager import log
+import logging
+log = logging.getLogger(__name__)
 
 
 class Repository:

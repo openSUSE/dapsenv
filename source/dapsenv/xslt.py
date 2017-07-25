@@ -18,8 +18,10 @@
 
 import os
 from dapsenv.exceptions import XSLTProcException, InvalidRootIDException
-from dapsenv.logmanager import log
 from lxml import etree
+
+import logging
+log = logging.getLogger(__name__)
 
 _used_files_sheet_path = "{}/data/get-all-used-files.xsl".format(
     os.path.dirname(os.path.abspath(__file__))

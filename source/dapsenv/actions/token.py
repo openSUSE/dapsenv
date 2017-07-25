@@ -19,6 +19,8 @@
 import dapsenv.token as token
 from dapsenv.actions.action import Action
 
+import logging
+log = logging.getLogger(__name__)
 
 class Token(Action):
     def __init__(self):
@@ -28,7 +30,8 @@ class Token(Action):
         """@see Action.execute()
         """
 
+        msg = "Token %s"
         if not args["regenerate_token"]:
-            print(token.getToken())
+            log.info(msg, token.getToken())
         else:
-            print(token.regenerateToken())
+            log.info(msg, token.regenerateToken())

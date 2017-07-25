@@ -24,12 +24,22 @@ from dapsenv.exceptions import InvalidCommandLineException, InvalidActionExcepti
 from dapsenv.general import (HOME_DIR, LOG_DIR, TMP_DIR, BUILDS_DIR, TEMPLATE_PATH,
                              DAEMON_AUTH_PATH, CLIENT_TOKEN_PATH, TOKEN_LENGTH)
 from dapsenv.logmanager import set_log_level
-from dapsenv.utils import randomString
+from dapsenv.utils import randomString, createdir
 from importlib import import_module
 from shutil import copyfile
 
+import dapsenv.const
+import logging
+import logging.config
+
+logging.getLogger().addHandler(logging.NullHandler())
+logging.config.dictConfig(const.DEFAULT_LOGGING_DICT)
+log = logging.getLogger(__package__)
 
 def main(args=None):
+    # todo better arg parsing
+    log.setLevel(const.LOGLEVELS[2])
+    # log.setLevel(LOGLEVELS.get(parsed_args["verbose"], logging.DEBUG))
     create_files()
 
     if not args:
@@ -55,29 +65,23 @@ def create_files():
     """Creates all necessary files and directories
     """
 
-    # directories
-    if not os.path.exists(HOME_DIR):
-        os.makedirs(HOME_DIR)
-
-    if not os.path.exists(LOG_DIR):
-        os.makedirs(LOG_DIR)
-
-    if not os.path.exists(TMP_DIR):
-        os.makedirs(TMP_DIR)
-
-    if not os.path.exists(BUILDS_DIR):
-        os.makedirs(BUILDS_DIR)
+    for d in (HOME_DIR, LOG_DIR, TMP_DIR, BUILDS_DIR):
+        createdir(d)
 
     # files
     if not os.path.exists(CLIENT_TOKEN_PATH):
         with open(CLIENT_TOKEN_PATH, "w") as token_file:
             token_file.write(randomString(TOKEN_LENGTH))
+            log.debug("%r created", CLIENT_TOKEN_PATH)
 
         os.chmod(CLIENT_TOKEN_PATH, stat.S_IREAD | stat.S_IWRITE)
+        log.debug('chmod of %s', CLIENT_TOKEN_PATH)
 
     if not os.path.exists(DAEMON_AUTH_PATH):
         copyfile("{}/daemon-auth.xml".format(TEMPLATE_PATH), DAEMON_AUTH_PATH)
+        log.debug("%r created", DAEMON_AUTH_PATH)
         os.chmod(DAEMON_AUTH_PATH, stat.S_IREAD | stat.S_IWRITE)
+        log.debug('chmod of %s', DAEMON_AUTH_PATH)
 
 
 def execute(args):

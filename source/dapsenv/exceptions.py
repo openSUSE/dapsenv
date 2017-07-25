@@ -22,7 +22,8 @@ from dapsenv.exitcodes import (E_INVALID_CLI, E_NO_IMPLEMENTATION_FOUND, E_CONFI
                                E_CONFIG_AUTOBUILD_ERROR, E_AUTOBUILDCONFIG_SYNTAX_ERROR,
                                E_AUTOBUILDCONFIG_NOT_FOUND, E_NOT_DOCKER_GROUP_MEMBER)
 from dapsenv.general import TOKEN_LENGTH
-from dapsenv.logmanager import log
+import logging
+log = logging.getLogger(__name__)
 
 
 class DapsEnvException(Exception):
@@ -39,7 +40,7 @@ class InvalidCommandLineException(DapsEnvException):
 
 class InvalidActionException(DapsEnvException):
     def __init__(self, action):
-        log.error("No implementation for '%s' found.", action)
+        log.error("No implementation for %r found.", action)
         sys.exit(E_NO_IMPLEMENTATION_FOUND)
 
 
@@ -54,13 +55,13 @@ class ConfigPropertyNotFoundException(DapsEnvException):
 
 class ConfigFilePermissionErrorException(DapsEnvException):
     def __init__(self, file_name):
-        log.error("Could not access config file '%s'! Please check the permissions.", file_name)
+        log.error("Could not access config file %r! Please check the permissions.", file_name)
         sys.exit(E_CONFIG_FILE_PERMISSION_DENIED)
 
 
 class ConfigFileNotCreatedException(DapsEnvException):
     def __init__(self, file_name):
-        log.error("Config file '%s' does not exist. Please generate it by using: 'dapsenv "
+        log.error("Config file %r does not exist. Please generate it by using: 'dapsenv "
                   "config --generate --path %s'", file_name, file_name)
         sys.exit(E_CONFIG_FILE_NOT_CREATED)
 
@@ -83,14 +84,14 @@ class AutoBuildConfigurationErrorException(DapsEnvException):
 
 class AutoBuildConfigSyntaxErrorException(DapsEnvException):
     def __init__(self, path, error):
-        log.error("The auto build configuration file '%s' is invalid. Error: %s",
+        log.error("The auto build configuration file %r is invalid. Error: %s",
                   path, error)
         sys.exit(E_AUTOBUILDCONFIG_SYNTAX_ERROR)
 
 
 class AutoBuildConfigNotFound(DapsEnvException):
     def __init__(self, path):
-        log.error("The auto build config file '%s' could not be found.", path)
+        log.error("The auto build config file %r could not be found.", path)
         sys.exit(E_AUTOBUILDCONFIG_NOT_FOUND)
 
 
@@ -123,7 +124,7 @@ class UnexpectedStderrOutputException(DapsEnvException):
         self.stderr = stderr
 
     def __str__(self):
-        log.error("Unexpected stderr for command '%s' caught: %s",
+        log.error("Unexpected stderr for command %r caught: %s",
                   self.command, self.stderr)
 
 
@@ -153,7 +154,7 @@ class GitErrorException(DapsEnvException):
         self.stderr = stderr
 
     def __str__(self):
-        log.error("Could not execute '%s': %s", self.command, self.stderr)
+        log.error("Could not execute %r: %s", self.command, self.stderr)
 
 
 class ContainerFileCreationFailed(DapsEnvException):
