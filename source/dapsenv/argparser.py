@@ -108,10 +108,7 @@ class ArgParser:
         )
 
     def addDaemonCommand(self):
-        logmanager_ip = configmanager.get_prop("logmanager_ip")
-        if not logmanager_ip:
-            default_ip = "127.0.0.1"
-            log.debug("Set logmanager_ip to %r", default_ip)
+        logmanager_ip = configmanager.get_prop("logmanager_ip", default='127.0.0.1')
 
         logserver_port = 5556
         try:
@@ -165,9 +162,7 @@ class ArgParser:
         )
 
     def addStatusCommand(self):
-        default_ip = configmanager.get_prop("api_client_default_ip")
-        if not default_ip:
-            default_ip = "127.0.0.1"
+        default_ip = configmanager.get_prop("api_client_default_ip", default='127.0.0.1')
 
         default_port = 5555
         try:
@@ -190,9 +185,7 @@ class ArgParser:
         )
 
     def addTriggerBuildCommand(self):
-        default_ip = configmanager.get_prop("api_client_default_ip")
-        if not default_ip:
-            default_ip = "127.0.0.1"
+        default_ip = configmanager.get_prop("api_client_default_ip", default='127.0.0.1')
 
         default_port = 5555
         try:
@@ -225,9 +218,7 @@ class ArgParser:
         )
 
     def addProjectListCommand(self):
-        default_ip = configmanager.get_prop("api_client_default_ip")
-        if not default_ip:
-            default_ip = "127.0.0.1"
+        default_ip = configmanager.get_prop("api_client_default_ip", default='127.0.0.1')
 
         default_port = 5555
         try:
@@ -283,9 +274,7 @@ class ArgParser:
         )
 
     def addViewLogCommand(self):
-        default_ip = configmanager.get_prop("api_client_default_ip")
-        if not default_ip:
-            default_ip = "127.0.0.1"
+        default_ip = configmanager.get_prop("api_client_default_ip", default='127.0.0.1')
 
         default_port = 5555
         try:
