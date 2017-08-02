@@ -2,7 +2,6 @@ import functools
 import logging
 import shlex
 import subprocess
-import os
 import itertools
 
 log = logging.getLogger(__name__)
@@ -56,10 +55,9 @@ class Job:
         return self.__str__()
 
     def run(self):
-        with open(os.devnull, 'w') as devnull:
-            self.sub = subprocess.Popen(shlex.split(self.build._cmd),
-                                        stdout=devnull,
-                                        stderr=devnull)
+        self.sub = subprocess.Popen(shlex.split(self.build._cmd),
+                                    stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL)
 
 
 class JobQueue:
