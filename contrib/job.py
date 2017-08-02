@@ -87,7 +87,7 @@ class JobQueue:
             log.debug('New job #%s with prio %r', job.id, job.prio)
             return True
         else:
-            log.debug('Build has allready an job: Job#%s Prio: %s',
+            log.debug('Build has already a job: Job#%s Prio: %s',
                       job.id,
                       job.prio)
             return False
