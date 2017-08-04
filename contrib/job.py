@@ -79,7 +79,7 @@ class JobQueue:
         bool
             True if successful, False otherwise.
         """
-        job = self.get_job(build)
+        job = self.get_job_by_build(build)
         if not job:
             job = Job(build, prio)
             self._waiting.append(job)
@@ -103,8 +103,8 @@ class JobQueue:
                 log.debug('No waiting jobs!')
                 break
 
-    def get_job(self, build):
-        for job in self._waiting + self._running + self._finished:
+    def get_job_by_build(self, build):
+        for job in itertools.chain(self._waiting, self._running, self._finished):
             if job.build == build:
                 return job
         return None
