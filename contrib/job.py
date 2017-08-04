@@ -33,22 +33,22 @@ class Build:
 class Job:
     _ids = itertools.count(0)
 
-    def __init__(self, build, prio):
+    def __init__(self, build, priority):
         self.id = next(self._ids)
-        self.prio = prio
+        self.priority = priority
         self.build = build
         self.sub = None
         log.debug('New %s created. %r', self.__class__.__name__, self)
 
     def __eq__(self, other):
-        return self.prio == other.prio
+        return self.priority == other.priority
 
     def __lt__(self, other):
-        return self.prio < other.prio
+        return self.priority < other.priority
 
     def __str__(self):
         return 'Id:{} Prio:{} Build:{}'.format(self.id,
-                                               self.prio,
+                                               self.priority,
                                                self.build)
 
     def __repr__(self):
@@ -68,7 +68,7 @@ class JobQueue:
         self._running = []
         self._finished = []
 
-    def push(self, build, prio):
+    def push(self, build, priority):
         """Add a new job to the queue
 
         Checks if `build` is not allready waiting, building or finished and
@@ -81,15 +81,15 @@ class JobQueue:
         """
         job = self.get_job_by_build(build)
         if not job:
-            job = Job(build, prio)
+            job = Job(build, priority)
             self._waiting.append(job)
             self._waiting.sort()
-            log.debug('New job #%s with prio %r', job.id, job.prio)
+            log.debug('New job #%s with priority %r', job.id, job.priority)
             return True
         else:
             log.debug('Build has already a job: Job#%s Prio: %s',
                       job.id,
-                      job.prio)
+                      job.priority)
             return False
 
     def _run_next_jobs(self, n=1):
@@ -112,11 +112,11 @@ class JobQueue:
     def run(self):
         for job in self._running:
             if job.sub.poll() is None:
-                log.debug('Job#%s:%s is still running', job.id, job.prio)
+                log.debug('Job#%s:%s is still running', job.id, job.priority)
             else:
                 self._finished.append(job)
                 self._running.remove(job)
-                log.debug('Job#%s:%s is done', job.id, job.prio)
+                log.debug('Job#%s:%s is done', job.id, job.priority)
         self._run_next_jobs(self._max_running_builds - len(self._running))
 
     def log_info(self):
@@ -125,9 +125,9 @@ class JobQueue:
         log.info('JR: %s', len(self._running))
         log.info('JF: %s', len(self._finished))
         if self._waiting:
-            log.info('Next Job: #%s prio %s (cmd: %s)',
+            log.info('Next Job: #%s priority %s (cmd: %s)',
                      self._waiting[-1].id,
-                     self._waiting[-1].prio,
+                     self._waiting[-1].priority,
                      self._waiting[-1].build._cmd)
 
     def __contains__(self, build):
@@ -140,5 +140,5 @@ class JobQueue:
         return False
 
     def __str__(self):
-        return ' '.join(['{}#{}'.format(job.id, job.prio)
+        return ' '.join(['{}#{}'.format(job.id, job.priority)
                         for job in self._waiting])
