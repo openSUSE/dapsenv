@@ -74,12 +74,14 @@ class JobQueue:
         Checks if `build` is not allready waiting, building or finished and
         pushes the new job to the waiting queue.
 
-        Returns
-        -------
-        bool
-            True if successful, False otherwise.
+        Args:
+            build (obj): Build object
+            priority (int): Job priority.
+        Returns:
+            bool: True if successful, False otherwise.
         """
-        job = self.get_job_by_build(build)
+
+        job = self.get_job_by_build(build)  # check if given build has already a job
         if not job:
             job = Job(build, priority)
             self._waiting.append(job)
