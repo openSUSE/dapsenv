@@ -3,8 +3,16 @@ import logging
 import shlex
 import subprocess
 import itertools
+import enum
 
 log = logging.getLogger(__name__)
+
+
+class JobStatus(enum.Enum):
+    WAITING = enum.auto()
+    RUNNING = enum.auto()
+    FINISHED = enum.auto()
+    SUSPENDED = enum.auto()
 
 
 class Build:
@@ -55,18 +63,19 @@ class Job:
         return self.__str__()
 
     def run(self):
+        """ Starts the build as subprocess. """
         self.sub = subprocess.Popen(shlex.split(self.build._cmd),
                                     stdout=subprocess.DEVNULL,
                                     stderr=subprocess.DEVNULL)
 
 
 class JobQueue:
-    def __init__(self, max_jobs=4, max_running_builds=2):
-        self._max_jobs = max_jobs
+    def __init__(self, max_running_builds=2):
         self._max_running_builds = max_running_builds
-        self._waiting = []
-        self._running = []
-        self._finished = []
+
+        self._jobs = dict()
+        for status in JobStatus:
+            self._jobs[status] = list()
 
     def push(self, build, priority):
         """Add a new job to the queue
@@ -82,65 +91,70 @@ class JobQueue:
         """
 
         job = self.get_job_by_build(build)  # check if given build has already a job
-        if not job:
-            job = Job(build, priority)
-            self._waiting.append(job)
-            self._waiting.sort()
-            log.debug('New job #%s with priority %r', job.id, job.priority)
-            return True
-        else:
+        if job:
             log.debug('Build has already a job: Job#%s Prio: %s',
                       job.id,
                       job.priority)
             return False
+        else:
+            job = Job(build, priority)
+            self._jobs[JobStatus.WAITING].append(job)
+            self._jobs[JobStatus.WAITING].sort()
+
+            log.debug('New job #%s with priority %r', job.id, job.priority)
+            return True
 
     def _run_next_jobs(self, n=1):
         for i in range(0, n):
-            if self._waiting:
-                next_job = self._waiting.pop()
+            if self._jobs[JobStatus.WAITING]:
+                next_job = self._jobs[JobStatus.WAITING].pop()
                 next_job.run()
-                self._running.append(next_job)
+                self._jobs[JobStatus.RUNNING].append(next_job)
                 log.debug('Job#%s is running now', next_job.id)
             else:
                 log.debug('No waiting jobs!')
                 break
 
     def get_job_by_build(self, build):
-        for job in itertools.chain(self._waiting, self._running, self._finished):
+        for job in itertools.chain(self._jobs[JobStatus.FINISHED],
+                                   self._jobs[JobStatus.RUNNING],
+                                   self._jobs[JobStatus.SUSPENDED],
+                                   self._jobs[JobStatus.WAITING]):
             if job.build == build:
                 return job
         return None
 
     def run(self):
-        for job in self._running:
+        for job in self._jobs[JobStatus.RUNNING]:
             if job.sub.poll() is None:
                 log.debug('Job#%s:%s is still running', job.id, job.priority)
             else:
-                self._finished.append(job)
-                self._running.remove(job)
+                self._jobs[JobStatus.FINISHED].append(job)
+                self._jobs[JobStatus.RUNNING].remove(job)
                 log.debug('Job#%s:%s is done', job.id, job.priority)
-        self._run_next_jobs(self._max_running_builds - len(self._running))
+        self._run_next_jobs(self._max_running_builds - len(self._jobs[JobStatus.RUNNING]))
 
     def log_info(self):
         log.info('=================================')
-        log.info('JW: %s', len(self._waiting))
-        log.info('JR: %s', len(self._running))
-        log.info('JF: %s', len(self._finished))
-        if self._waiting:
+        log.info(self)
+        if self._jobs[JobStatus.WAITING]:
             log.info('Next Job: #%s priority %s (cmd: %s)',
-                     self._waiting[-1].id,
-                     self._waiting[-1].priority,
-                     self._waiting[-1].build._cmd)
+                     self._jobs[JobStatus.WAITING][-1].id,
+                     self._jobs[JobStatus.WAITING][-1].priority,
+                     self._jobs[JobStatus.WAITING][-1].build._cmd)
 
     def __contains__(self, build):
-        for job in self._waiting:
+        for job in self:
             if job.build == build:
                 return True
-        for job in self._running:
-            if job.build == build:
-                return True
-        return False
+        else:
+            return False
 
     def __str__(self):
-        return ' '.join(['{}#{}'.format(job.id, job.priority)
-                        for job in self._waiting])
+        return ' '.join(['{status}: {count}'.format(status=status.name, count=len(self._jobs[status])) for status in JobStatus])
+
+    def __iter__(self):
+        return itertools.chain(self._jobs[JobStatus.FINISHED],
+                               self._jobs[JobStatus.RUNNING],
+                               self._jobs[JobStatus.SUSPENDED],
+                               self._jobs[JobStatus.WAITING])

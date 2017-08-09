@@ -9,7 +9,7 @@ logging.config.dictConfig(const.DEFAULT_LOGGING_DICT)
 log = logging.getLogger('test')
 
 
-jq = job.JobQueue(33, 7)
+jq = job.JobQueue(7)
 
 for i in range(0, 100):
     sec = random.randint(1, 10)
