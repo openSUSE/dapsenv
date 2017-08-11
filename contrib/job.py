@@ -104,7 +104,7 @@ class JobQueue:
             self._jobs.append(job)
 
             log.debug('New job #%s with priority %r', job.id, job.priority)
-            return True
+            return job.id
 
     def _run_next_jobs(self, n=1):
         for i in range(0, n):
