@@ -9,17 +9,14 @@ log = logging.getLogger(__name__)
 
 
 class JobStatus(enum.Enum):
-    WAITING = enum.auto()
-    RUNNING = enum.auto()
-    FINISHED = enum.auto()
-    SUSPENDED = enum.auto()
+    WAITING, RUNNING, FINISHED, SUSPENDED = range(4)
 
 
 class Build:
     def __init__(self, repo, ref, cmd):
         self._repo = repo
         self._ref = ref
-        self._cmd = cmd
+        self.cmd = cmd
         log.debug("New %s created: %r",
                   self.__class__.__name__,
                   self)
@@ -71,7 +68,7 @@ class Job:
 
     def run(self):
         """ Starts the build as subprocess. """
-        self.sub = subprocess.Popen(shlex.split(self.build._cmd),
+        self.sub = subprocess.Popen(shlex.split(self.build.cmd),
                                     stdout=subprocess.DEVNULL,
                                     stderr=subprocess.DEVNULL)
 
@@ -80,9 +77,7 @@ class JobQueue:
     def __init__(self, max_running_builds=2):
         self._max_running_builds = max_running_builds
 
-        self._jobs = dict()
-        for status in JobStatus:
-            self._jobs[status] = list()
+        self._jobs = {status: list() for status in JobStatus}
 
     def push(self, build, priority):
         """Add a new job to the queue
@@ -148,7 +143,7 @@ class JobQueue:
             log.info('Next Job: #%s priority %s (cmd: %s)',
                      self._jobs[JobStatus.WAITING][-1].id,
                      self._jobs[JobStatus.WAITING][-1].priority,
-                     self._jobs[JobStatus.WAITING][-1].build._cmd)
+                     self._jobs[JobStatus.WAITING][-1].build.cmd)
 
     def __contains__(self, build):
         for job in self:
