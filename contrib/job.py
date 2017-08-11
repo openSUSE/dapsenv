@@ -42,13 +42,20 @@ class Job:
     _ids = itertools.count(0)
 
     def __init__(self, build, priority):
+        """ Create a new Job.
+
+        Args:
+            build (object): Build instance
+            priority (int): Priority, high value means high priority
+        """
         self.id = next(self._ids)
         self.priority = priority
         self.build = build
-        self.sub = None
+        self.sub = None  # subprocess
         log.debug('New %s created. %r', self.__class__.__name__, self)
 
     def __eq__(self, other):
+        """ Two jobs are considered equal if their prioritys are equal. """
         return self.priority == other.priority
 
     def __lt__(self, other):
