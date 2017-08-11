@@ -49,6 +49,7 @@ class Job:
         self.priority = priority
         self.build = build
         self.sub = None  # subprocess
+        self.status = JobStatus.WAITING
         log.debug('New %s created. %r', self.__class__.__name__, self)
 
     def __eq__(self, other):
@@ -77,7 +78,7 @@ class JobQueue:
     def __init__(self, max_running_builds=2):
         self._max_running_builds = max_running_builds
 
-        self._jobs = {status: list() for status in JobStatus}
+        self._jobs = list()
 
     def push(self, build, priority):
         """Add a new job to the queue
@@ -92,7 +93,7 @@ class JobQueue:
             bool: True if successful, False otherwise.
         """
 
-        job = self.get_job_by_build(build)  # check if given build has already a job
+        job = self.get_job_by_build(build)  # check if build has already a job
         if job:
             log.debug('Build has already a job: Job#%s Prio: %s',
                       job.id,
@@ -100,50 +101,54 @@ class JobQueue:
             return False
         else:
             job = Job(build, priority)
-            self._jobs[JobStatus.WAITING].append(job)
-            self._jobs[JobStatus.WAITING].sort()
+            self._jobs.append(job)
 
             log.debug('New job #%s with priority %r', job.id, job.priority)
             return True
 
     def _run_next_jobs(self, n=1):
         for i in range(0, n):
-            if self._jobs[JobStatus.WAITING]:
-                next_job = self._jobs[JobStatus.WAITING].pop()
+            if self.jobs_of_status(JobStatus.WAITING):
+                next_job = max(self.jobs_of_status(JobStatus.WAITING))
                 next_job.run()
-                self._jobs[JobStatus.RUNNING].append(next_job)
+                next_job.status = JobStatus.RUNNING
                 log.debug('Job#%s is running now', next_job.id)
             else:
                 log.debug('No waiting jobs!')
                 break
 
     def get_job_by_build(self, build):
-        for job in itertools.chain(self._jobs[JobStatus.FINISHED],
-                                   self._jobs[JobStatus.RUNNING],
-                                   self._jobs[JobStatus.SUSPENDED],
-                                   self._jobs[JobStatus.WAITING]):
+        for job in self._jobs:
             if job.build == build:
                 return job
         return None
 
     def run(self):
-        for job in self._jobs[JobStatus.RUNNING]:
+        for job in self.jobs_of_status(JobStatus.RUNNING):
             if job.sub.poll() is None:
                 log.debug('Job#%s:%s is still running', job.id, job.priority)
             else:
-                self._jobs[JobStatus.FINISHED].append(job)
-                self._jobs[JobStatus.RUNNING].remove(job)
+                job.status = JobStatus.FINISHED
                 log.debug('Job#%s:%s is done', job.id, job.priority)
-        self._run_next_jobs(self._max_running_builds - len(self._jobs[JobStatus.RUNNING]))
+        self._run_next_jobs(self._max_running_builds -
+                            len(self.jobs_of_status(JobStatus.RUNNING)))
+
+    def jobs_of_status(self, status):
+        """ Return a list of jobs with the given status
+        Args:
+            status (enum): Status from JobStatus
+        """
+        return [job for job in self._jobs if job.status == status]
 
     def log_info(self):
         log.info('=================================')
         log.info(self)
-        if self._jobs[JobStatus.WAITING]:
+        if self.jobs_of_status(JobStatus.WAITING):
+            next_job = max(self.jobs_of_status(JobStatus.WAITING))
             log.info('Next Job: #%s priority %s (cmd: %s)',
-                     self._jobs[JobStatus.WAITING][-1].id,
-                     self._jobs[JobStatus.WAITING][-1].priority,
-                     self._jobs[JobStatus.WAITING][-1].build.cmd)
+                     next_job.id,
+                     next_job.priority,
+                     next_job.build.cmd)
 
     def __contains__(self, build):
         for job in self:
@@ -153,7 +158,11 @@ class JobQueue:
             return False
 
     def __str__(self):
-        return ' '.join(['{status}: {count}'.format(status=status.name, count=len(self._jobs[status])) for status in JobStatus])
+        stats = [(status.name, len(self.jobs_of_status(status)))
+                 for status in JobStatus]
+        return ' '.join(['{status}: {count}'.format(status=stat[0],
+                                                    count=stat[1])
+                         for stat in stats])
 
     def __iter__(self):
         return itertools.chain(self._jobs[JobStatus.FINISHED],
